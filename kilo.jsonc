@@ -13,7 +13,49 @@
         "KILO_MODE_HINT": "debug"
       },
       "enabled": true,
-      "timeout": 20000
+      "timeout": 10000
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true,
+      "timeout": 15000
+    },
+    "mcp_everything": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-everything"
+      ],
+      "enabled": false,
+      "timeout": 10000
+    },
+    "puppeteer": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ],
+      "enabled": false,
+      "timeout": 15000
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "cmd",
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "enabled": false,
+      "timeout": 10000
     }
   },
   "permission": {

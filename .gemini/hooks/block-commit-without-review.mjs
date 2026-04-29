@@ -10,9 +10,7 @@ try {
   }
   input = JSON.parse(data);
 } catch (e) {
-  process.stderr.write(`Error parsing hook input: ${e.message}\n`);
-  process.stdout.write("{}");
-  process.exit(0);
+  deny(`Error parsing hook input: ${e.message}`);
 }
 
 const tool = input.tool_name;

@@ -2,44 +2,52 @@
 
 Council workflow = Gemini (coder) + Kilo Gateway free (reviewer) + guardrails.
 
-*This repository implements a portable, production-grade agentic review workflow.*
-
 ## Requisiti
 - Node.js >= 18
 - git
-- Gemini CLI installato
+- Gemini CLI
+- (opz.) Kilo Code / Antigravity installati
 
-## Setup (una volta sola)
+## 1) Installa GSD (completo)
+Aggiorna/installa GSD:
+  npx get-shit-done-cc@latest
 
-### 1) Installa GSD (completo)
-# Gemini CLI (globale)
-npx get-shit-done-cc --gemini --global
+Non-interactive:
+  # Gemini CLI (globale)
+  npx get-shit-done-cc --gemini --global
 
-# Kilo (locale nel progetto)
-# Nota: Kilo usa kilo.jsonc in root per evitare conflitti con GSD
-npx get-shit-done-cc --kilo --local
+  # Kilo (locale nel progetto)
+  npx get-shit-done-cc --kilo --local
 
-# Antigravity (locale nel progetto) -> installa in ./.agent/
-npx get-shit-done-cc --antigravity --local
+  # Antigravity (locale nel progetto)
+  npx get-shit-done-cc --antigravity --local
 
 (vedi get-shit-done for i path esatti)
 
-### 2) Installa MCP
-# Antigravity
-node scripts/install-antigravity-mcp.mjs
+## 2) Setup Kilo Code (MCP + permission)
+  node scripts/install-kilo-jsonc.mjs
 
-# Kilo Code
-node scripts/install-kilo-mcp.mjs
+## 3) Setup Antigravity (MCP)
+  node scripts/install-antigravity-mcp.mjs
 
-### 3) Ricarica comandi Gemini CLI
-Apri Gemini CLI nella root del repo e fai:
+Poi reload/restart Antigravity.
+
+## 4) Setup Gemini CLI commands
+I comandi sono in .gemini/commands/council/
+Dentro Gemini CLI:
   /commands reload
 
-## Workflow (Plan → Review → Apply)
+## Workflow consigliato (Plan → Review → Apply)
 1) Implementa feature/fix
 2) Staggia: git add -A
-3) /council:review  (scrive docs/REVIEW_KILO.md)
-4) /council:review-apply (applica solo High/Medium + test)
-5) Commit
+3) /council:review
+4) /council:review-apply
+5) Test finali
+6) Commit
 
-Nota: un hook blocca git commit/push se manca docs/REVIEW_KILO.md.
+## skills.sh (opzionale)
+Install:
+  npx skills add vercel-labs/agent-skills
+
+No telemetry:
+  DISABLE_TELEMETRY=1 npx skills add vercel-labs/agent-skills

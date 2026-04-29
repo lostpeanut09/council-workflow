@@ -30,7 +30,7 @@ try {
   cfg = { mcpServers: {} };
 }
 
-if (!cfg.mcpServers || typeof cfg.mcpServers !== "object") cfg.mcpServers = {};
+cfg.mcpServers ||= {};
 const next = structuredClone(cfg);
 
 next.mcpServers["kilo-reviewer"] = {

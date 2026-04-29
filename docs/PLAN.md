@@ -26,7 +26,7 @@ Upgrade the `council-workflow` repository to follow the latest agentic coding st
 - `.gemini/hooks/block-commit-without-review.mjs`: Hook to prevent commits without review.
 - `.gemini/settings.json`: Enable hooks.
 - `scripts/install-antigravity-mcp.mjs`: Setup script for Antigravity.
-- `scripts/install-kilo-mcp.mjs`: Setup script for Kilo Code.
+- `scripts/install-kilo-mcp.mjs`: Setup script for Kilo Code (writes to root `kilo.jsonc`).
 - `README.md`: Updated quickstart.
 
 ## Verification

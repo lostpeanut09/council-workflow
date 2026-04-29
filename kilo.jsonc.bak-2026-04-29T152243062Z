@@ -1,0 +1,22 @@
+{
+  "mcp": {
+    "kilo-reviewer": {
+      "type": "local",
+      "command": [
+        "node",
+        "C:\\ai-tools\\council-workflow-repo\\mcp\\server.mjs"
+      ],
+      "environment": {
+        "REPO_PATH": "C:\\ai-tools\\council-workflow-repo",
+        "KILO_BASE_URL": "https://api.kilo.ai/api/gateway",
+        "KILO_MODEL": "kilo-auto/free",
+        "KILO_MODE_HINT": "debug"
+      },
+      "enabled": true,
+      "timeout": 20000
+    }
+  },
+  "permission": {
+    "kilo-reviewer_*": "allow"
+  }
+}
