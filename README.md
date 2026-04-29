@@ -4,6 +4,24 @@
 
 Council workflow = **Gemini (coder)** + **Kilo Gateway free (reviewer)** + guardrails.
 
+---
+
+## Audit Compliance v16.0
+
+Questo repository è conforme agli standard di code review v16.0 (Aprile 2026).
+
+| Standard | Conformità | Verifica |
+|----------|------------|----------|
+| **Code Analysis Skill v16.0** | ✅ | [`skills/code-analysis-audit/SKILL.md`](skills/code-analysis-audit/SKILL.md) contiene tutti i gate `::STEP0_VERIFIED::` - `::STEP5_VERIFIED::` |
+| **Path relativi (Zero absolute paths)** | ✅ | `kilo.jsonc` e `.kilocode/mcp.json` usano percorsi relativi; niente `C:\` nei file tracciati |
+| **Clean repo / No runtime artifacts** | ✅ | `.gitignore` esclude `docs/PLAN.md`, `docs/REVIEW_KILO.md` e i backup (`*.bak-*`) |
+| **Line endings normalizzati** | ✅ | `.gitattributes` forza LF per i file di configurazione |
+
+**Ultima verifica:** 2026-04-30  
+**Commit di conformità:** [`9053503`](https://github.com/lostpeanut09/council-workflow/commit/9053503)  
+
+---
+
 ## Requisiti
 - Node.js >= 18
 - git
@@ -29,7 +47,7 @@ npx get-shit-done-cc --kilo --local
 npx get-shit-done-cc --antigravity --local
 ```
 
-(vedi get-shit-done for i path esatti)
+(vedi get-shit-done per i path esatti)
 
 ## (Consigliato) Crea un piano
 Copia `docs/PLAN.template.md` in `docs/PLAN.md` e compilalo.
