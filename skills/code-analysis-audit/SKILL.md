@@ -14,12 +14,12 @@ allowed-tools:
 license: MIT
 metadata:
   author: user-defined
-  version: "12.0.0"
+  version: "16.0.0"
 ---
 
 # Code Analysis & Audit Skill (April 2026)
 
-> v12.0 · April 2026
+> v16.0 · April 2026
 > Scientific basis: arXiv:2603.10047 (Mar 2026) · arXiv:2505.09031 (May 2025)
 > DeCRIM arXiv:2410.06458 · arXiv:2510.24476 · obra/superpowers (skills.sh)
 
