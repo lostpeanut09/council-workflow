@@ -17,8 +17,7 @@ metadata:
   version: "16.0.0"
 ---
 
-# Code Analysis & Audit Skill (April 2026)
-
+# Code Analysis & Audit Skill
 > v16.0 · April 2026
 > Scientific basis: arXiv:2603.10047 (Mar 2026) · arXiv:2505.09031 (May 2025)
 > DeCRIM arXiv:2410.06458 · arXiv:2510.24476 · obra/superpowers (skills.sh)
@@ -31,10 +30,9 @@ Analyze, audit, review, or debug code/tasks. Find bugs, security issues, or veri
 > Hardest/most critical rules are listed first.
 
 **RULE 1 — NO GATE SKIP**
-Every step ends with a gate token. You CANNOT output the gate token until you have
-produced the required output table for that step in full.
+Every step ends with a gate token. Do not output the gate token until the required output table for that step is fully produced.
 Gate token format: `::STEPN_VERIFIED::`
-Writing the gate without the table is a critical violation.
+Writing the gate token without the table is a critical violation.
 
 **RULE 2 — NO SKIP UNDER ANY RATIONALIZATION**
 > obra/superpowers: "Skills that enforce discipline must resist rationalization.
@@ -56,8 +54,7 @@ If a tool is unavailable, state it explicitly. Never simulate or fabricate resul
 Never invent URLs, publication dates, or web sources.
 
 **RULE 4 — ROOT CAUSE BEFORE FIX + CAUSE-LEVEL GROUNDING**
-> arXiv:2603.00539 (Feb 2026): LLM rationales reliably state *what* is wrong but NOT *why*.
-> Rationales that identify the right defect but attribute it to the wrong cause generate harmful fixes.
+> arXiv:2603.00539 — cause-level grounding. See references/SCIENTIFIC-BASIS.md.
 
 - Find root cause before proposing any fix. Symptom-only fixes are invalid.
 - Separate "what is wrong" from "why it is wrong" — these are two distinct fields.
@@ -68,12 +65,21 @@ Never invent URLs, publication dates, or web sources.
 
 ---
 
-> **RULE ANCHOR** (arXiv:2603.23530 — prospective memory failures): R1: gate token only after full table. R2: no skips, no silent drops. R3: no invented URLs/dates. R4: root cause before fix. Uncertain if done? Not done.
+> **RULE ANCHOR** (arXiv:2303.23530 — prospective memory failures): R1: gate token only after full table. R2: no skips, no silent drops. R3: no invented URLs/dates. R4: root cause before fix. Uncertain if done? Not done.
+
+---
+
+## Role
+
+Act as a senior software engineer and code auditor with expertise in:
+security analysis, algorithmic correctness, performance profiling, and systematic debugging.
+Apply rigorous evidence-based reasoning. Never flag correct code as broken.
+Never propose a fix without a traced root cause.
 
 ---
 
 ## STEP 0 — Domain Glossary Injection
-> arXiv:2603.10047 M5 — Domain Glossary Injection (+77% verdict quality in 100-run benchmark)
+> arXiv:2603.10047 M5 (+77%). See references/SCIENTIFIC-BASIS.md.
 
 Before anything else, define key domain terms, acronyms, and tech-specific concepts
 present in the task. If none exist, write "No domain glossary needed."
@@ -91,10 +97,9 @@ present in the task. If none exist, write "No domain glossary needed."
 ---
 
 ## STEP 1 — Analyze Code / Task
-> DeCRIM arXiv:2410.06458 — GPT-4 fails ≥1 constraint in 21%+ of multi-constraint instructions
-> when constraints are not isolated. Decompose every constraint individually.
+> DeCRIM arXiv:2410.06458 (21%+ failure rate). See references/SCIENTIFIC-BASIS.md.
 
-- Analyze the provided input (code, description, requirements)
+- Analyze the provided input: code, description, requirements
 - Define 3 measurable and testable success criteria
 - List every individual constraint so each can be verified independently
 
@@ -192,21 +197,28 @@ Available skills:
 
 ---
 
-## STEP 1.7 — Run Skills (Single-Task per Skill)
-> arXiv:2603.10047 M3 — Single-Task Agent Specialization (+80% verdict quality)
-> Run ONE skill at a time. Each skill reports its finding before the next begins.
+## STEP 1.7 — Apply Skills (Single-Task per Skill)
+> arXiv:2603.10047 M3 (+80%) · agentskills.io spec. See references/SCIENTIFIC-BASIS.md for full citations.
+
+**How skills actually work** (agentskills.io / Simform Engineering, Apr 2026):
+A skill's SKILL.md is injected into context. The agent must then explicitly follow the instructions
+in that skill's body. If if the instruction is not quoted and application not shown,
+the skill is loaded but unapplied — which is the same as not using it.
 
 **Required output (repeat for each skill):**
 
 | Field | Value |
 |-------|-------|
-| Skill | [tag or name] |
-| Task assigned | [one specific task only] |
-| Finding | [specific finding — not a summary of multiple things] |
+| Skill | [name — e.g. systematic-debugging] |
+| Instruction followed | [exact rule or step from that skill's SKILL.md you are applying] |
+| Applied to | [specific code location, function, or task element] |
+| Result | [concrete finding — not a summary, not a restatement of the instruction] |
 
-> **Context anchor** (arXiv:2507.13334 — lost-in-the-middle: up to 73% degradation for info in middle):
-> Summarize the three most critical skill findings here at the END of Step 1.7, so they remain
-> accessible in context when later steps need them.
+> If a skill from Step 1.6 cannot be loaded or its instructions are inaccessible:
+> write `SKILL UNAVAILABLE: [skill name] — [reason]` and skip it. Do not fabricate a result.
+
+> **Context anchor** (arXiv:2507.13334 — lost-in-the-middle: up to 73% degradation):
+> After all skills, write the top-3 findings here so they stay accessible in later steps.
 
 | Top finding | Source skill | Why it matters for this task |
 |-------------|-------------|------------------------------|
@@ -214,30 +226,43 @@ Available skills:
 | [finding 2] | [skill] | [relevance] |
 | [finding 3] | [skill] | [relevance] |
 
-> **Gate check before proceeding:** I have produced one Field/Value table per skill, without batching skills together, and I have written the top-3 findings anchor table above.
+> **Gate check before proceeding:** Each skill block has all four fields populated, including
+> "Instruction followed" with a real quote or paraphrase from that skill's instructions.
+> Listing a skill name with only a generic finding is a violation of this gate.
 
 `::STEP1_7_VERIFIED::`
 
 ---
 
 ## STEP 2 — Check Online (April 2026)
-> **[R3 reminder]** Do NOT invent URLs or dates.
+> **[R3 reminder]** Do NOT invent URLs or dates. Use real tool results only.
+> Different agents name their search tool differently. This step is tool-agnostic.
+> arXiv:2502.15335 — self-grounding: reference prior step outputs as premises before search.
 
-**MANDATORY TOOL DISCOVERY TEST — run this first, before any research:**
+**TOOL DISCOVERY + DOMAIN RESEARCH — two goals, one query:**
 
-You have a search capability in your environment. It may be named `web_search`, `search`,
+A search capability is available in this environment. It may be named `web_search`, `search`,
 `browser`, `tavily`, `perplexity`, `brave_search`, `google`, or something else entirely.
-The name does not matter. The capability exists.
 
-To confirm which tool is available, run a test query right now:
+Do not run a generic test query. Instead, use the domain glossary from STEP 0 to build the
+first search query. This confirms the tool works **and** produces immediately useful results.
 
-> **Test query:** `"agent skills best practices 2026"`
-> If this returns any result → your search tool works. Note its name. Use it for all queries below.
-> If this fails with a tool-not-found error → state the exact error and write `SEARCH TOOL ERROR: [error]`.
-> "I don't have a search tool" is never a valid response here. Run the test and report what happens.
+**Query construction rule:**
+1. Take 2–3 key terms from the STEP 0 glossary (the most domain-specific ones).
+2. Append the current year or "latest" for recency.
+3. Run that as the first query. If results return → tool confirmed. Use it for all queries below.
+4. If the query fails with a tool-not-found error → write `SEARCH TOOL ERROR: [exact error]`.
+5. "I don't have a search tool" is never valid here. Run the query and report what happens.
+
+**Fallback rule:**
+If STEP 0 produced "No domain glossary needed", use the generic test query:
+`"agent skills best practices 2026"`.
+
+Example (if glossary contains `PageRank`, `Louvain`, `graphology`):
+> First query: `graphology PageRank Louvain latest`
 
 **Anti-hallucination rule:**
-- Use whatever search tool your environment provides — every time, no exceptions
+- Use whatever search tool the environment provides — every time, no exceptions
 - Never invent URLs, titles, dates, or sources
 - Every result must include: real URL (from tool), publication date, confirmed vs projection
 - If tool truly inactive: write `SEARCH NOT EXECUTED: [exact error or reason]`
@@ -249,20 +274,18 @@ To confirm which tool is available, run a test query right now:
 |-----------------------|------|---------|--------|
 | [real URL] | [date] | [summary] | CONFIRMED / PROJECTION |
 
-> **Gate check before proceeding:** I ran the tool discovery test above and reported the result. I produced the web results table with real URLs, or wrote SEARCH NOT EXECUTED with the exact reason.
-> **Rule echo [R3]:** Every URL in my output was returned by my actual search tool. I did not invent any source.
+> **Gate check before proceeding:** The first query was built from STEP 0 glossary terms (not a generic test). Results are real tool output. Wrote SEARCH NOT EXECUTED with exact reason if tool failed.
+> **Rule echo [R3]:** Every URL above was returned by the actual search tool. No source invented.
 
 `::STEP2_VERIFIED::`
 
 ---
 
 ## STEP 3 — Error & Logical Bug Report
-> **[R4 reminder]** Identify root cause before any fix.
+> **[R4 reminder]** Identify root cause before any fix. Symptom-only fixes are invalid.
 > **[R2 reminder]** Produce both Phase A and Phase B tables even if no issues found.
 
-> arXiv:2603.10047 M4 — Enhanced Data Registry: extract raw facts first, synthesize after
-> (+100% verdict quality in 100-run benchmark)
-> obra/superpowers:systematic-debugging — find root cause before any fix
+> arXiv:2603.10047 M4 (+100%) · obra/superpowers:systematic-debugging. See references/SCIENTIFIC-BASIS.md.
 
 **Phase A — Raw Facts** (observable only, no interpretation):
 
@@ -271,9 +294,7 @@ To confirm which tool is available, run a test query right now:
 | F1 | [observable fact — no interpretation] | [line / function / module] |
 
 **Phase B — Classified Findings (dual-assessment):**
-> Pattern: critique / pbakaus/impeccable (82.9K) — two independent analyses prevent confirmation bias.
-> Run Assessment A and Assessment B separately. Neither reads the other's output first.
-> Then synthesize: note where both agree (high confidence) and where only one flagged (needs review).
+> Pattern: critique/pbakaus/impeccable (82.9K) — dual-assessment to prevent confirmation bias.
 
 **Assessment A — Static read** (text analysis, no runtime assumptions):
 > Use semi-formal reasoning (arXiv:2603.01896): each finding must include Premise → Evidence → Conclusion.
@@ -371,7 +392,7 @@ Priority scale: `[P0]` <24h · `[P1]` <1 week · `[P2]` <1 month · `[P3]` backl
 | Cons | [cons] | [cons] |
 | Compatibility | [compat] | [compat] |
 
-> **Fix-guided Verification Filter** (arXiv:2603.00539): The fix above is counterfactual evidence.
+> **Fix-guided Verification Filter** (arXiv:2603.00539 — see references/SCIENTIFIC-BASIS.md):
 > Confirm: (1) the fix directly addresses the root cause identified in Phase A (not just the symptom),
 > (2) the fix does not introduce new failures, (3) the original code behavior is clearly changed by it.
 > If any of these three fails: the fix is invalid — revise before writing the gate token.
@@ -384,11 +405,9 @@ Priority scale: `[P0]` <24h · `[P1]` <1 week · `[P2]` <1 month · `[P3]` backl
 
 ## STEP 5 — Self-Verification Cycle (Mandatory)
 > **[R1+R2 reminder]** This is the last step. Skipping or shortening it is the most common
-> prospective memory failure (arXiv:2603.23530).
+> prospective memory failure (arXiv:2303.23530). Produce every table fully.
 
-> arXiv:2505.09031 — CoT + self-consistency + self-verification reduces
-> hallucinations significantly more than CoT alone
-> arXiv:2510.24476 — CoT mitigates logical hallucinations from skipped reasoning steps
+> arXiv:2505.09031 + arXiv:2510.24476. See references/SCIENTIFIC-BASIS.md.
 
 Steps:
 1. Write an initial answer to the original question or task
@@ -412,8 +431,8 @@ Steps:
 |-------------------------|
 | [conflicts with prior steps and resolutions, or NONE] |
 
-**Spec self-review** (before finalizing):
-> Pattern: brainstorming / obra/superpowers (124.2K) — scan for gaps before finalizing.
+**Spec self-review** (before writing revised answer):
+> Pattern: brainstorming/obra/superpowers (124.2K).
 
 | Check | Status | Notes |
 |-------|--------|-------|
@@ -431,5 +450,5 @@ Steps:
 `::STEP5_VERIFIED::`
 
 ---
-`::ALL_STEPS_VERIFIED:: — ANALYSIS COMPLETE
+`::ALL_STEPS_VERIFIED:: — ANALYSIS COMPLETE`
 ---
