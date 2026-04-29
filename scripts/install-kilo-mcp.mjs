@@ -4,15 +4,24 @@ import fssync from "node:fs";
 import path from "node:path";
 
 function stamp() {
-  const d = new Date();
-  return d.toISOString().replaceAll(":", "").replaceAll(".", "");
+  return new Date().toISOString().replaceAll(":", "").replaceAll(".", "");
 }
 
 const repoRoot = path.resolve(process.argv[2] || process.cwd());
-const targetPath = path.join(repoRoot, ".kilo", "kilo.jsonc");
+const targetPath = path.join(repoRoot, "kilo.jsonc");
 const serverPath = path.join(repoRoot, "mcp", "server.mjs");
 
-await fs.mkdir(path.dirname(targetPath), { recursive: true });
+if (!fssync.existsSync(serverPath)) {
+  console.error(`ERROR: MCP server not found: ${serverPath}`);
+  process.exit(1);
+}
+
+// Basic validation: check if file is not empty
+const stats = fssync.statSync(serverPath);
+if (stats.size === 0) {
+  console.error(`ERROR: MCP server file is empty: ${serverPath}`);
+  process.exit(1);
+}
 
 let cfg = {};
 let existed = false;
@@ -24,8 +33,7 @@ try {
   cfg = {};
 }
 
-if (!cfg.mcp || typeof cfg.mcp !== "object") cfg.mcp = {};
-
+cfg.mcp ||= {};
 cfg.mcp["kilo-reviewer"] = {
   type: "local",
   command: ["node", serverPath],
@@ -38,6 +46,10 @@ cfg.mcp["kilo-reviewer"] = {
   enabled: true,
   timeout: 20000
 };
+
+// opzionale: auto-approve tool MCP (se vuoi approval manuale, rimuovi questa sezione)
+cfg.permission ||= {};
+cfg.permission["kilo-reviewer_*"] = "allow";
 
 if (existed) {
   const backup = `${targetPath}.bak-${stamp()}`;

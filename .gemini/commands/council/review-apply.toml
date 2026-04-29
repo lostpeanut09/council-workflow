@@ -1,12 +1,13 @@
-description = "Apply only HIGH/MEDIUM items from docs/REVIEW_KILO.md, add tests, re-run tests."
+description = "Apply only HIGH/MEDIUM from docs/REVIEW_KILO.md, add tests, re-run tests."
 prompt = """
 You MUST:
 - Apply ONLY HIGH and MEDIUM items from the review.
 - Ignore LOW/nits unless they are 1-line and reduce risk.
-- For each fix: add/adjust tests.
-- Re-run the project's test command (as defined in docs/PLAN.md if present, otherwise use the repo's standard test command).
-- Stop after tests pass and provide a short changelog + remaining risks.
+- Add/adjust tests for each fix.
+- Re-run the project's test command (prefer docs/PLAN.md if present).
 
-Review file:
+Review:
 @{docs/REVIEW_KILO.md}
+
+Now implement.
 """

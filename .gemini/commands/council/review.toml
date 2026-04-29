@@ -1,10 +1,10 @@
-description = "Run external Kilo review on staged diff and write docs/REVIEW_KILO.md"
+description = "Run external council review via Kilo Gateway (kilo-auto/free) on STAGED diff."
 prompt = """
-Do NOT modify code yet.
+DO NOT modify code yet.
 
-1) Run the Kilo external review (injected below) and summarize the findings.
-2) Produce a prioritized TODO list with categories: HIGH, MEDIUM, LOW.
-3) Tell me to run /council:review-apply when I'm ready.
+1) Read the review below.
+2) Produce a prioritized TODO list grouped: HIGH / MEDIUM / LOW.
+3) Tell me to run /council:review-apply to implement.
 
 Kilo review:
 ```text

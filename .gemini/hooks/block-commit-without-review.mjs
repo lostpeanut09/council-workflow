@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 
-let inputRaw = "";
+let input;
 try {
-  inputRaw = fs.readFileSync(0, "utf8");
+  const data = fs.readFileSync(0, "utf8");
+  if (!data) {
+    process.stdout.write("{}");
+    process.exit(0);
+  }
+  input = JSON.parse(data);
 } catch (e) {
+  process.stderr.write(`Error parsing hook input: ${e.message}\n`);
+  process.stdout.write("{}");
   process.exit(0);
 }
 
-if (!inputRaw.trim()) process.exit(0);
-
-const input = JSON.parse(inputRaw);
 const tool = input.tool_name;
 const toolInput = input.tool_input || {};
 
@@ -32,9 +36,8 @@ if (!looksLikeCommit) {
   process.exit(0);
 }
 
-const reviewPath = "docs/REVIEW_KILO.md";
-if (!fs.existsSync(reviewPath)) {
-  deny(`Blocked: ${cmd}\nReason: missing ${reviewPath}. Run /council:review first.`);
+if (!fs.existsSync("docs/REVIEW_KILO.md")) {
+  deny(`Blocked: ${cmd}\nReason: missing docs/REVIEW_KILO.md. Run /council:review first.`);
 }
 
 process.stdout.write("{}");

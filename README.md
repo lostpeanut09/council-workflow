@@ -1,28 +1,45 @@
-# Council Workflow
+# council-workflow
 
-A portable peer-review system for coding agents using Gemini CLI and Kilo AI Gateway.
+Council workflow = Gemini (coder) + Kilo Gateway free (reviewer) + guardrails.
 
-## Installation
+*This repository implements a portable, production-grade agentic review workflow.*
 
-1. Clone the repository to a local directory.
-2. Register the MCP server in Antigravity:
-   ```bash
-   node scripts/install-antigravity-mcp.mjs
-   ```
-3. Register the Gemini CLI commands by symlinking or copying `.gemini/commands/council/` to your global commands directory.
+## Requisiti
+- Node.js >= 18
+- git
+- Gemini CLI installato
 
-## Usage
+## Setup (una volta sola)
 
-1. Stage your changes with `git add`.
-2. Run `/council:review` to generate a technical review in `docs/REVIEW_KILO.md`.
-3. Run `/council:review-apply` to automatically implement high and medium priority fixes.
+### 1) Installa GSD (completo)
+# Gemini CLI (globale)
+npx get-shit-done-cc --gemini --global
 
-## Features
+# Kilo (locale nel progetto)
+# Nota: Kilo usa kilo.jsonc in root per evitare conflitti con GSD
+npx get-shit-done-cc --kilo --local
 
-- External code review via Kilo AI Gateway (kilo-auto/free).
-- Automated PR reviews through GitHub Actions.
-- Portable configuration with zero hardcoded absolute paths.
-- Integration with the ECC Decision Council for strategic trade-offs.
+# Antigravity (locale nel progetto) -> installa in ./.agent/
+npx get-shit-done-cc --antigravity --local
 
----
-April 2026
+(vedi get-shit-done for i path esatti)
+
+### 2) Installa MCP
+# Antigravity
+node scripts/install-antigravity-mcp.mjs
+
+# Kilo Code
+node scripts/install-kilo-mcp.mjs
+
+### 3) Ricarica comandi Gemini CLI
+Apri Gemini CLI nella root del repo e fai:
+  /commands reload
+
+## Workflow (Plan → Review → Apply)
+1) Implementa feature/fix
+2) Staggia: git add -A
+3) /council:review  (scrive docs/REVIEW_KILO.md)
+4) /council:review-apply (applica solo High/Medium + test)
+5) Commit
+
+Nota: un hook blocca git commit/push se manca docs/REVIEW_KILO.md.

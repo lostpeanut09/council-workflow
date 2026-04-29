@@ -30,10 +30,9 @@ try {
   cfg = { mcpServers: {} };
 }
 
-if (!cfg || typeof cfg !== "object") cfg = { mcpServers: {} };
 if (!cfg.mcpServers || typeof cfg.mcpServers !== "object") cfg.mcpServers = {};
-
 const next = structuredClone(cfg);
+
 next.mcpServers["kilo-reviewer"] = {
   command: "node",
   args: [serverPath],
@@ -56,4 +55,3 @@ await fs.writeFile(tmp, JSON.stringify(next, null, 2), "utf8");
 await fs.rename(tmp, configPath);
 
 console.log(`Updated: ${configPath}`);
-console.log(`Installed MCP server: kilo-reviewer`);

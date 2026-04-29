@@ -32,9 +32,9 @@ const body = {
       role: "system",
       content:
         "You are a strict senior code reviewer.\n" +
-        "Return Markdown with sections:\n" +
+        "Return Markdown sections:\n" +
         "- Summary\n- High-risk issues\n- Medium issues\n- Low/nits\n- Concrete fixes\n- Missing tests\n" +
-        "Be specific (file paths/functions)."
+        "Be specific: file paths and function names."
     },
     { role: "user", content: `Review this staged diff:\n\n${diff}` }
   ],
@@ -42,14 +42,9 @@ const body = {
   max_tokens: 1200
 };
 
-const headers = {
-  "Content-Type": "application/json",
-  "x-kilocode-mode": MODE_HINT
-};
-
 const res = await fetch(`${KILO_BASE_URL}/chat/completions`, {
   method: "POST",
-  headers,
+  headers: { "Content-Type": "application/json", "x-kilocode-mode": MODE_HINT },
   body: JSON.stringify(body)
 });
 
