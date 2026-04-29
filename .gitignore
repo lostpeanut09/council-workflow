@@ -1,0 +1,10 @@
+# Generated council artifacts
+docs/REVIEW_KILO.md
+
+# Backups created by installers
+kilo.jsonc.bak-*
+.kilocode/mcp.json.bak-*
+
+# OS/IDE noise
+.DS_Store
+Thumbs.db

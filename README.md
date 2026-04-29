@@ -1,6 +1,8 @@
 # council-workflow
 
-Council workflow = Gemini (coder) + Kilo Gateway free (reviewer) + guardrails.
+**Nota portabilità:** non committare path assoluti in `kilo.jsonc`. Questo repo usa path relativi.
+
+Council workflow = **Gemini (coder)** + **Kilo Gateway free (reviewer)** + guardrails.
 
 ## Requisiti
 - Node.js >= 18
@@ -9,41 +11,57 @@ Council workflow = Gemini (coder) + Kilo Gateway free (reviewer) + guardrails.
 - (opz.) Kilo Code / Antigravity installati
 
 ## 1) Installa GSD (completo)
+
 Aggiorna/installa GSD:
-  npx get-shit-done-cc@latest
+```bash
+npx get-shit-done-cc@latest
+```
 
 Non-interactive:
-  # Gemini CLI (globale)
-  npx get-shit-done-cc --gemini --global
+```bash
+# Gemini CLI (globale)
+npx get-shit-done-cc --gemini --global
 
-  # Kilo (locale nel progetto)
-  npx get-shit-done-cc --kilo --local
+# Kilo (locale nel progetto)
+npx get-shit-done-cc --kilo --local
 
-  # Antigravity (locale nel progetto)
-  npx get-shit-done-cc --antigravity --local
+# Antigravity (locale nel progetto)
+npx get-shit-done-cc --antigravity --local
+```
 
 (vedi get-shit-done for i path esatti)
 
+## (Consigliato) Crea un piano
+Copia `docs/PLAN.template.md` in `docs/PLAN.md` e compilalo.
+
 ## 2) Setup Kilo Code (MCP + permission)
-  node scripts/install-kilo-jsonc.mjs
+
+Questo script aggiorna **kilo.jsonc** (formato moderno) e genera anche **.kilocode/mcp.json** (legacy/compat).
+```bash
+node scripts/install-kilo-jsonc.mjs
+```
 
 ## 3) Setup Antigravity (MCP)
-  node scripts/install-antigravity-mcp.mjs
-
+```bash
+node scripts/install-antigravity-mcp.mjs
+```
 Poi reload/restart Antigravity.
 
 ## 4) Setup Gemini CLI commands
-I comandi sono in .gemini/commands/council/
+
+I comandi sono in `.gemini/commands/council/`.
 Dentro Gemini CLI:
-  /commands reload
+```
+/commands reload
+```
 
 ## Workflow consigliato (Plan → Review → Apply)
-1) Implementa feature/fix
-2) Staggia: git add -A
-3) /council:review
-4) /council:review-apply
-5) Test finali
-6) Commit
+1) Implementa feature/fix  
+2) Staggia: `git add -A`  
+3) `/council:review`  
+4) `/council:review-apply`  
+5) Test finali  
+6) Commit  
 
 ## skills.sh (opzionale)
 
@@ -57,14 +75,10 @@ No telemetry:
 DISABLE_TELEMETRY=1 npx skills add vercel-labs/agent-skills
 ```
 
-### Installare la skill locale `code-analysis-audit` (multi-agent)
-Questa repo include `skills/code-analysis-audit/SKILL.md`.
-```bash
-# Installa su Antigravity, Gemini CLI, Kilo e Warp
-npx skills add . --skill code-analysis-audit -a antigravity -a gemini-cli -a kilo -a warp -y
-```
+### Skill locale (repo)
+Questo repo include una skill locale (vedi `skills/`).
 
-No telemetry:
+Install multi-agent:
 ```bash
-DISABLE_TELEMETRY=1 npx skills add . --skill code-analysis-audit -a antigravity -a gemini-cli -a kilo -a warp -y
+npx skills add . --skill code-analysis-audit -a antigravity -a gemini-cli -a kilo -a warp -y
 ```
