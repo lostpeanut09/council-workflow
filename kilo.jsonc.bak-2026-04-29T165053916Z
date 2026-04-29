@@ -3,10 +3,7 @@
   "mcp": {
     "kilo-reviewer": {
       "type": "local",
-      "command": [
-        "node",
-        "mcp/server.mjs"
-      ],
+      "command": ["node", "mcp/server.mjs"],
       "environment": {
         "REPO_PATH": ".",
         "KILO_BASE_URL": "https://api.kilo.ai/api/gateway",
@@ -24,37 +21,19 @@
     },
     "mcp_everything": {
       "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "command": ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-everything"],
       "enabled": false,
       "timeout": 10000
     },
     "puppeteer": {
       "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ],
+      "command": ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"],
       "enabled": false,
       "timeout": 15000
     },
     "filesystem": {
       "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ],
+      "command": ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem"],
       "enabled": false,
       "timeout": 10000
     }

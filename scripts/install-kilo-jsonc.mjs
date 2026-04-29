@@ -7,33 +7,53 @@ function stamp() {
   return new Date().toISOString().replaceAll(":", "").replaceAll(".", "");
 }
 
-const repoRoot = path.resolve(process.argv[2] || process.cwd());
-const serverPath = path.join(repoRoot, "mcp", "server.mjs");
-const targetPath = path.join(repoRoot, "kilo.jsonc");
+async function readJsonOr(defaultValue, filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, "utf8"));
+  } catch {
+    return defaultValue;
+  }
+}
 
-if (!fssync.existsSync(serverPath)) {
-  console.error(`ERROR: MCP server not found: ${serverPath}`);
+async function writeJsonWithBackup(filePath, json, backupLabel) {
+  const existed = fssync.existsSync(filePath);
+  if (existed) {
+    const backup = `${filePath}.bak-${backupLabel}`;
+    await fs.copyFile(filePath, backup);
+    console.log(`Backup: ${backup}`);
+  } else {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+  }
+
+  await fs.writeFile(filePath, JSON.stringify(json, null, 2), "utf8");
+  console.log(`Updated: ${filePath}`);
+}
+
+const repoRoot = path.resolve(process.argv[2] || process.cwd());
+
+// Keep paths PORTABLE: always write relative paths into committed configs.
+const serverRel = "mcp/server.mjs";
+const serverAbs = path.join(repoRoot, "mcp", "server.mjs");
+
+if (!fssync.existsSync(serverAbs)) {
+  console.error(`ERROR: MCP server not found: ${serverAbs}`);
   process.exit(1);
 }
 
-let cfg = {};
-let existed = false;
-try {
-  cfg = JSON.parse(await fs.readFile(targetPath, "utf8"));
-  existed = true;
-} catch {
-  cfg = {};
-}
+// -----------------------------
+// 1) Modern config: kilo.jsonc
+// -----------------------------
+const kiloJsoncPath = path.join(repoRoot, "kilo.jsonc");
+const kiloCfg = await readJsonOr({}, kiloJsoncPath);
 
-cfg.mcp ||= {};
-cfg.permission ||= {};
+kiloCfg.mcp ||= {};
+kiloCfg.permission ||= {};
 
-// 1) Il tuo reviewer MCP locale
-cfg.mcp["kilo-reviewer"] = {
+kiloCfg.mcp["kilo-reviewer"] = {
   type: "local",
-  command: ["node", serverPath],
+  command: ["node", serverRel],
   environment: {
-    REPO_PATH: repoRoot,
+    REPO_PATH: ".",
     KILO_BASE_URL: "https://api.kilo.ai/api/gateway",
     KILO_MODEL: "kilo-auto/free",
     KILO_MODE_HINT: "debug"
@@ -41,45 +61,61 @@ cfg.mcp["kilo-reviewer"] = {
   enabled: true,
   timeout: 10000
 };
-cfg.permission["kilo-reviewer_*"] = "allow";
 
-// 2) Context7 (remote docs) – esempio ufficiale Kilo
-cfg.mcp["context7"] = {
+// Auto-approve MCP tools from this server (wildcard)
+kiloCfg.permission["kilo-reviewer_*"] = "allow";
+
+// Starter kit MCPs (disabled by default where appropriate)
+kiloCfg.mcp["context7"] = {
   type: "remote",
   url: "https://mcp.context7.com/mcp",
   enabled: true,
   timeout: 15000
 };
 
-// 3) Everything test server (debug) – esempio ufficiale Kilo
-cfg.mcp["mcp_everything"] = {
+kiloCfg.mcp["mcp_everything"] = {
   type: "local",
   command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-everything"],
   enabled: false,
   timeout: 10000
 };
 
-// 4) Puppeteer (browser automation) – esempio Kilo (Windows via cmd)
-cfg.mcp["puppeteer"] = {
+kiloCfg.mcp["puppeteer"] = {
   type: "local",
   command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"],
   enabled: false,
   timeout: 15000
 };
 
-// 5) Filesystem (ATTENZIONE: abilitalo solo se ti serve)
-cfg.mcp["filesystem"] = {
+kiloCfg.mcp["filesystem"] = {
   type: "local",
   command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem"],
   enabled: false,
   timeout: 10000
 };
 
-if (existed) {
-  const backup = `${targetPath}.bak-${stamp()}`;
-  await fs.copyFile(targetPath, backup);
-  console.log(`Backup: ${backup}`);
-}
+await writeJsonWithBackup(kiloJsoncPath, kiloCfg, stamp());
 
-await fs.writeFile(targetPath, JSON.stringify(cfg, null, 2), "utf8");
-console.log(`Updated: ${targetPath}`);
+// -------------------------------------------
+// 2) Legacy/compat config: .kilocode/mcp.json
+// -------------------------------------------
+// Kilo docs mention a project-level .kilocode/mcp.json with `mcpServers` format.
+const legacyPath = path.join(repoRoot, ".kilocode", "mcp.json");
+const legacyCfg = await readJsonOr({ mcpServers: {} }, legacyPath);
+legacyCfg.mcpServers ||= {};
+
+legacyCfg.mcpServers["kilo-reviewer"] = {
+  command: "node",
+  args: [serverRel],
+  env: {
+    REPO_PATH: ".",
+    KILO_BASE_URL: "https://api.kilo.ai/api/gateway",
+    KILO_MODEL: "kilo-auto/free",
+    KILO_MODE_HINT: "debug"
+  },
+  // Auto-approve tool(s) from this MCP server in legacy config format
+  alwaysAllow: ["kilo_review"],
+  disabled: false
+};
+
+await writeJsonWithBackup(legacyPath, legacyCfg, stamp());

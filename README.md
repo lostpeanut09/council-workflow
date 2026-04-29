@@ -46,8 +46,25 @@ Dentro Gemini CLI:
 6) Commit
 
 ## skills.sh (opzionale)
-Install:
-  npx skills add vercel-labs/agent-skills
+
+### Installare skill pubbliche
+```bash
+npx skills add vercel-labs/agent-skills
+```
 
 No telemetry:
-  DISABLE_TELEMETRY=1 npx skills add vercel-labs/agent-skills
+```bash
+DISABLE_TELEMETRY=1 npx skills add vercel-labs/agent-skills
+```
+
+### Installare la skill locale `code-analysis-audit` (multi-agent)
+Questa repo include `skills/code-analysis-audit/SKILL.md`.
+```bash
+# Installa su Antigravity, Gemini CLI, Kilo e Warp
+npx skills add . --skill code-analysis-audit -a antigravity -a gemini-cli -a kilo -a warp -y
+```
+
+No telemetry:
+```bash
+DISABLE_TELEMETRY=1 npx skills add . --skill code-analysis-audit -a antigravity -a gemini-cli -a kilo -a warp -y
+```

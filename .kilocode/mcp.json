@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "kilo-reviewer": {
+      "command": "node",
+      "args": [
+        "mcp/server.mjs"
+      ],
+      "env": {
+        "REPO_PATH": ".",
+        "KILO_BASE_URL": "https://api.kilo.ai/api/gateway",
+        "KILO_MODEL": "kilo-auto/free",
+        "KILO_MODE_HINT": "debug"
+      },
+      "alwaysAllow": [
+        "kilo_review"
+      ],
+      "disabled": false
+    }
+  }
+}
