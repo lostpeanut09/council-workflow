@@ -1,0 +1,35 @@
+name: Council - Kilo Free PR Review
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # checkout base repo code (trusted), not PR head
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Post council review comment (Kilo Gateway free)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: only if you want authenticated / higher reliability
+          # KILO_API_KEY: ${{ secrets.KILO_API_KEY }}
+          KILO_MODEL: kilo-auto/free
+          KILO_BASE_URL: https://api.kilo.ai/api/gateway
+          KILO_MODE_HINT: debug
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/kilo_pr_review.mjs
