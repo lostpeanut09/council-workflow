@@ -1,0 +1,17 @@
+{
+  "checkpointing": { "enabled": true },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "name": "block-commit-without-review",
+            "type": "command",
+            "command": "node .gemini/hooks/block-commit-without-review.mjs"
+          }
+        ]
+      }
+    ]
+  }
+}
