@@ -1,0 +1,16 @@
+description = "External council review via Kilo Gateway (kilo-auto/free) on staged diff."
+prompt = """
+You are the primary coder.
+
+1) Read the external review below.
+2) Produce a prioritized action list (High → Medium → Low).
+3) Do NOT change code yet. Wait for /council:review-apply to actually apply fixes.
+
+External review (Kilo Gateway, free tier):
+```text
+!{node scripts/kilo_review.mjs}
+```
+
+Review rubric:
+@{docs/kilo-review-rubric.md}
+"""
