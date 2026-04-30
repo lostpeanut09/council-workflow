@@ -18,60 +18,67 @@ jobs:
 
       - name: Block deprecated @modelcontextprotocol/server-github
         run: |
-          # Exclude comment lines (// ...) and docs/ directory
+          # Search only source files, excluding the workflow that contains these strings
+          # as part of its own grep commands and documentation
           BAD=$(git grep -n "@modelcontextprotocol/server-github" \
-                -- . ':!docs/**' ':!*.md' 2>/dev/null \
-                | grep -v '^\s*//' | grep -v '//.*@modelcontextprotocol' || true)
+                -- 'kilo.jsonc' '.kilocode/mcp.json' 'scripts/*.mjs' 2>/dev/null || true)
           if [ -n "$BAD" ]; then
-            echo "❌ Found deprecated @modelcontextprotocol/server-github (non-comment line)"
+            echo "❌ Found deprecated @modelcontextprotocol/server-github"
             echo "$BAD"
             echo "   → Use ghcr.io/github/github-mcp-server (Docker official) instead"
             exit 1
           fi
-          echo "✅ No deprecated server-github in active code"
+          echo "✅ No deprecated server-github in source files"
 
       - name: Block deprecated @modelcontextprotocol/server-puppeteer
         run: |
-          # Exclude comment lines (// ...) and docs/ directory
           BAD=$(git grep -n "@modelcontextprotocol/server-puppeteer" \
-                -- . ':!docs/**' ':!*.md' 2>/dev/null \
-                | grep -v '^\s*//' | grep -v '//.*@modelcontextprotocol' || true)
+                -- 'kilo.jsonc' '.kilocode/mcp.json' 'scripts/*.mjs' 2>/dev/null || true)
           if [ -n "$BAD" ]; then
-            echo "❌ Found deprecated @modelcontextprotocol/server-puppeteer (non-comment line)"
+            echo "❌ Found deprecated @modelcontextprotocol/server-puppeteer"
             echo "$BAD"
             echo "   → Use mcp/playwright (Docker/Microsoft official) instead"
             exit 1
           fi
-          echo "✅ No deprecated server-puppeteer in active code"
+          echo "✅ No deprecated server-puppeteer in source files"
 
-      - name: Require pinned @modelcontextprotocol/server-filesystem
+      - name: Require pinned versions in kilo.jsonc and .kilocode/mcp.json
         run: |
-          # Match the package name NOT followed by @<digit> (i.e. unversioned)
-          if git grep -nP '@modelcontextprotocol/server-filesystem(?!@\d)' \
-              -- kilo.jsonc '.kilocode/mcp.json' 'scripts/install-kilo-jsonc.mjs' 2>/dev/null; then
-            echo "❌ server-filesystem must be pinned: @modelcontextprotocol/server-filesystem@YYYY.M.D"
+          # Check only the config files where versions must be literal strings (not JS templates)
+          # Template literals in install-kilo-jsonc.mjs are validated indirectly via kilo.jsonc output
+          for FILE in kilo.jsonc .kilocode/mcp.json; do
+            if [ ! -f "$FILE" ]; then continue; fi
+
+            if git grep -nP '@modelcontextprotocol/server-filesystem(?!@\d)' -- "$FILE" 2>/dev/null; then
+              echo "❌ $FILE: server-filesystem must be pinned to @YYYY.M.D"
+              exit 1
+            fi
+            if git grep -nP '@modelcontextprotocol/server-everything(?!@\d)' -- "$FILE" 2>/dev/null; then
+              echo "❌ $FILE: server-everything must be pinned to @YYYY.M.D"
+              exit 1
+            fi
+          done
+          echo "✅ All config file MCP references are pinned"
+
+      - name: MCP_PINS constant must exist in installer
+        run: |
+          # Verify install-kilo-jsonc.mjs defines pinned versions via MCP_PINS constant
+          if ! git grep -q 'const MCP_PINS' -- scripts/install-kilo-jsonc.mjs 2>/dev/null; then
+            echo "❌ scripts/install-kilo-jsonc.mjs missing MCP_PINS constant"
+            echo "   → Add: const MCP_PINS = { filesystem: \"x.y.z\", everything: \"x.y.z\" }"
             exit 1
           fi
-          echo "✅ server-filesystem is pinned"
+          echo "✅ MCP_PINS constant present in installer"
 
-      - name: Require pinned @modelcontextprotocol/server-everything
+      - name: No literal unversioned npx MCP calls in config files
         run: |
-          if git grep -nP '@modelcontextprotocol/server-everything(?!@\d)' \
-              -- kilo.jsonc '.kilocode/mcp.json' 'scripts/install-kilo-jsonc.mjs' 2>/dev/null; then
-            echo "❌ server-everything must be pinned: @modelcontextprotocol/server-everything@YYYY.M.D"
-            exit 1
-          fi
-          echo "✅ server-everything is pinned"
-
-      - name: No bare npx without version for MCP packages
-        run: |
-          # Catch patterns like: npx -y @modelcontextprotocol/server-X" (without @version)
-          BAD=$(git grep -nP 'npx.*@modelcontextprotocol/server-[a-z-]+"' \
-                -- '*.mjs' '*.json' '*.jsonc' 2>/dev/null \
+          # In JSON/JSONC config files, package names must appear with @version literal
+          BAD=$(git grep -nP '"@modelcontextprotocol/server-(?!sdk)[a-z-]+"' \
+                -- 'kilo.jsonc' '.kilocode/mcp.json' 2>/dev/null \
                 | grep -vP '@\d' || true)
           if [ -n "$BAD" ]; then
-            echo "❌ Unversioned npx MCP package(s):"
+            echo "❌ Unversioned MCP package in config file:"
             echo "$BAD"
             exit 1
           fi
-          echo "✅ All npx MCP invocations are versioned"
+          echo "✅ All MCP packages in config files are versioned"

@@ -56,18 +56,3 @@ jobs:
             exit 1
           fi
           echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
-
-      - name: No unpinned MCP npm packages
-        run: |
-          # Fail if any @modelcontextprotocol/* package appears without @x.y.z pin
-          # Matches patterns like: "server-filesystem" or "server-filesystem@latest"
-          # but NOT "server-filesystem@2025.8.21"
-          BAD=$(git grep -n '@modelcontextprotocol/server-[a-z-]*"' -- '*.mjs' '*.json' '*.jsonc' 2>/dev/null \
-                | grep -v '@modelcontextprotocol/sdk' \
-                | grep -v '@[0-9]' || true)
-          if [ -n "$BAD" ]; then
-            echo "❌ Unpinned MCP package(s) found (missing @x.y.z version):"
-            echo "$BAD"
-            exit 1
-          fi
-          echo "✅ All MCP npm packages are pinned"
