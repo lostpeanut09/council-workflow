@@ -1,8 +1,10 @@
 # MCP Server Allowlist
 
-> Policy: ogni server MCP usato in questo progetto deve essere documentato qui.
-> Aggiorna questa lista prima di abilitare nuovi server in `kilo.jsonc`.
-> Se cambia lo schema dei tool, richiede re-review (update hash_check).
+> **Policy**: ogni server MCP usato in questo progetto deve essere documentato qui.
+> Aggiorna questa lista PRIMA di abilitare nuovi server in `kilo.jsonc`.
+> Se cambia lo schema dei tool o la versione: richiede re-review (council PR).
+
+---
 
 ## Server attivi
 
@@ -15,81 +17,108 @@
 | **Risk level** | LOW |
 | **Toolset** | `review_code`, `review_diff` |
 | **Enabled** | `true` |
-| **Motivazione** | Council peer-review automatico su staged diff e PR |
 | **Source** | Interno al repo — `mcp/server.mjs` |
+| **Motivazione** | Council peer-review automatico su staged diff e PR |
 
 ### context7 (REMOTE — Streamable HTTP)
 | Campo | Valore |
 |-------|--------|
-| **Tipo** | `remote` |
+| **Tipo** | `remote` — Streamable HTTP (spec 2025-03-26) |
 | **URL** | `https://mcp.context7.com/mcp` |
 | **Risk level** | LOW |
-| **Toolset** | Documentation lookup |
+| **Toolset** | Documentation lookup (read-only) |
 | **Enabled** | `true` |
-| **Motivazione** | Accesso a documentazione librerie up-to-date |
 | **Auth** | None (public read-only) |
-| **Note** | Preferire endpoint `/mcp` (Streamable HTTP, apr 2026) |
+| **Motivazione** | Accesso a documentazione librerie up-to-date |
 
 ---
 
-## Server disabilitati (off by default)
+## Server disabilitati (off by default — least privilege)
 
-### mcp_everything (LOCAL)
+### mcp_everything — pinned `@2025.8.18`
 | Campo | Valore |
 |-------|--------|
-| **Enabled** | `false` |
+| **Package** | `@modelcontextprotocol/server-everything@2025.8.18` |
 | **Risk level** | HIGH |
+| **Enabled** | `false` |
 | **Motivazione disabilitazione** | Tool generico ad ampio scope — abilita solo in dev locale con supervisione |
+| **Advisory check** | https://advisories.gitlab.com/pkg/npm/@modelcontextprotocol/server-everything/ |
 
-### puppeteer (LOCAL)
+### filesystem — pinned `@2025.8.21`
 | Campo | Valore |
 |-------|--------|
-| **Enabled** | `false` |
+| **Package** | `@modelcontextprotocol/server-filesystem@2025.8.21` |
 | **Risk level** | HIGH |
+| **Enabled** | `false` |
+| **Note** | Passare directory allowed come argomenti quando si abilita (es. `"."`) |
+| **Motivazione disabilitazione** | Accesso file system — abilita solo con path scope esplicito |
+| **Advisory check** | https://advisories.gitlab.com/pkg/npm/@modelcontextprotocol/server-filesystem/ |
+
+### github — official Docker (`ghcr.io/github/github-mcp-server`)
+| Campo | Valore |
+|-------|--------|
+| **Image** | `ghcr.io/github/github-mcp-server` (GitHub official) |
+| **Risk level** | MEDIUM |
+| **Enabled** | `false` |
+| **Toolsets** | `default` (start minimal — non usare `all`) |
+| **Requires** | Docker running + `GITHUB_PAT` env var |
+| **Auth** | `GITHUB_PERSONAL_ACCESS_TOKEN` via env (mai in repo) |
+| **Sostituisce** | `@modelcontextprotocol/server-github` (npm deprecated) |
+| **Motivazione disabilitazione** | Accesso API GitHub — abilitare solo per workflow specifici |
+| **Source** | https://github.com/github/github-mcp-server |
+
+### playwright — official Docker (`mcp/playwright`)
+| Campo | Valore |
+|-------|--------|
+| **Image** | `mcp/playwright` (Microsoft — Docker Hub MCP Catalog) |
+| **Risk level** | HIGH |
+| **Enabled** | `false` |
+| **Requires** | Docker running |
+| **Sostituisce** | `@modelcontextprotocol/server-puppeteer` (npm deprecated) |
 | **Motivazione disabilitazione** | Browser automation — potenziale exfiltration, abilita solo quando necessario |
-
-### filesystem (LOCAL)
-| Campo | Valore |
-|-------|--------|
-| **Enabled** | `false` |
-| **Risk level** | HIGH |
-| **Motivazione disabilitazione** | Accesso file system illimitato — abilita solo con path scope esplicito |
+| **Source** | https://hub.docker.com/mcp/server/playwright |
 
 ---
 
 ## Policy operative (Aprile 2026)
 
 ### Trasporti
-- **Locale**: sempre STDIO (`type: local`, `command: [...]`)
-- **Remoto nuovo**: preferire Streamable HTTP (endpoint `/mcp`)
-- **SSE**: solo per backward-compat con server legacy; deprecato da spec MCP 2025-03-26
+| Scenario | Protocollo | Note |
+|----------|-----------|------|
+| Server locale | **STDIO** | stdout solo JSON-RPC, log su stderr |
+| Server remoto nuovo | **Streamable HTTP** (`/mcp` endpoint GET+POST) | Standard spec 2025-03-26 |
+| Server remoto legacy | **HTTP+SSE** (fallback) | Deprecato, solo back-compat |
 
 ### Least privilege
-- Partire con toolset minimi (read-only se possibile)
-- Abilitare toolset "write" solo quando il workflow lo richiede
-- `filesystem`, `puppeteer`, `mcp_everything`: `enabled: false` di default — sempre
+- Abilitare **solo i toolset necessari** (specie su GitHub MCP: usare `default` non `all`)
+- Tool potenti (`filesystem`, `playwright`, `github`) restano `enabled: false` di default
+- Abilitare temporaneamente su branch dev, non su `main`
 
-### Supply chain
-- Per server via `npx`: **pinnare la versione** (`@pkg@x.y.z`) per riproducibilità
-- Verificare advisory su Snyk/GitHub per pacchetti `@modelcontextprotocol/*`
-- Preferire server "official" (es. GitHub official MCP) rispetto a terze parti
+### Versioning e supply chain
+- Tutti i pacchetti `@modelcontextprotocol/*` devono essere **pinnati a `@x.y.z`** esatto
+- Niente `@latest`, niente `npx pkg` senza versione (violazione CI `repo-hygiene.yml`)
+- Controllare advisory prima di bumping: https://advisories.gitlab.com/pkg/npm/@modelcontextprotocol/
+- Usare `node scripts/update-mcp-pins.mjs` per proposta di aggiornamento (read-only)
+- Per Docker: usare SHA image digest in produzione (es. `ghcr.io/github/github-mcp-server@sha256:...`)
 
-### OAuth (per server remoti con auth)
-- Nessun token in repo — solo via env/secrets manager
-- Usare **Resource Indicators** (RFC 8707) per isolare token per server
+### OAuth e token (server remoti con auth)
+- Token **mai in repo** — solo via env (`{env:VARNAME}`) o secrets manager
+- Usare **Resource Indicators** (RFC 8707): token per server A non devono funzionare su server B
 - Validare audience/risorsa lato server a ogni request
 
 ### Tool definition change control (anti "rug pull")
-- Se un server remoto cambia definizione dei tool → richiede re-review manuale
-- Aggiornare questa allowlist con il nuovo toolset e motivazione
+- Aggiornare questa allowlist se cambia toolset, versione o source di un server
+- Qualsiasi modifica a server abilitati richiede PR con council review (`/council:review`)
+- Per server remoti: monitorare changelog del vendor per tool definition changes
 
 ---
 
-## Come aggiungere un nuovo server
+## Come aggiungere un nuovo server (checklist)
 
-1. Identificare su `mcpservers.org` o repository ufficiale
-2. Verificare: Official/trusted source? Toolset minimale? Tipo di auth?
-3. Aggiungere entry in questa tabella con risk level e motivazione
-4. Aggiungere entry in `kilo.jsonc` con `enabled: false` inizialmente
-5. Testare in locale, poi cambiare a `enabled: true` se OK
-6. Aprire PR con review del council (`/council:review`)
+- [ ] Verificare su `mcpservers.org` o repo ufficiale — preferire **Official**
+- [ ] Verificare: tipo di auth, toolset esposto, risk level
+- [ ] Aggiungere entry in questa tabella con risk level e motivazione
+- [ ] Aggiungere in `kilo.jsonc` con `enabled: false` e versione **pinnata**
+- [ ] Testare in locale su branch dev
+- [ ] Aprire PR — council review obbligatorio (`/council:review`)
+- [ ] Cambiare a `enabled: true` solo dopo merge approvato

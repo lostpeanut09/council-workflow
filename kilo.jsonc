@@ -1,11 +1,9 @@
 {
   "mcp": {
+    // ── ACTIVE ────────────────────────────────────────────────────────────────
     "kilo-reviewer": {
       "type": "local",
-      "command": [
-        "node",
-        "mcp/server.mjs"
-      ],
+      "command": ["node", "mcp/server.mjs"],
       "environment": {
         "REPO_PATH": ".",
         "KILO_BASE_URL": "https://api.kilo.ai/api/gateway",
@@ -15,47 +13,56 @@
       "enabled": true,
       "timeout": 10000
     },
+    // Remote: Streamable HTTP (preferred over SSE per spec 2025-03-26)
     "context7": {
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true,
       "timeout": 15000
     },
+
+    // ── DISABLED BY DEFAULT (least privilege) ─────────────────────────────────
+
+    // Pinned to 2025.8.18 — supply-chain control
     "mcp_everything": {
       "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-everything"
-      ],
+      "command": ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-everything@2025.8.18"],
       "enabled": false,
       "timeout": 10000
     },
-    "puppeteer": {
-      "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-puppeteer"
-      ],
-      "enabled": false,
-      "timeout": 15000
-    },
+    // Pinned to 2025.8.21 — pass allowed dirs as args when enabling
+    // e.g. add "./" or specific paths after the package name
     "filesystem": {
       "type": "local",
-      "command": [
-        "cmd",
-        "/c",
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem"
-      ],
+      "command": ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem@2025.8.21", "."],
       "enabled": false,
       "timeout": 10000
+    },
+    // GitHub official MCP (replaced deprecated @modelcontextprotocol/server-github)
+    // Uses Docker + GITHUB_TOOLSETS for least-privilege tool selection
+    // Requires: Docker running + GITHUB_PAT env var set
+    "github": {
+      "type": "local",
+      "command": [
+        "docker", "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_TOOLSETS",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PAT}",
+        "GITHUB_TOOLSETS": "default"
+      },
+      "enabled": false,
+      "timeout": 20000
+    },
+    // Playwright official (Microsoft Docker image, replaced deprecated server-puppeteer)
+    // Requires: Docker running
+    "playwright": {
+      "type": "local",
+      "command": ["docker", "run", "-i", "--rm", "mcp/playwright"],
+      "enabled": false,
+      "timeout": 20000
     }
   },
   "permission": {

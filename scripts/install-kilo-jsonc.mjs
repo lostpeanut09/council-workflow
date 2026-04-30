@@ -39,6 +39,13 @@ const repoRoot = path.resolve(process.argv[2] || process.cwd());
 const serverAbs = path.join(repoRoot, "mcp", "server.mjs");
 const serverRel = "mcp/server.mjs";
 
+// Pinned npm versions — update deliberately, not via @latest drift
+// Check advisories before bumping: https://advisories.gitlab.com/pkg/npm/@modelcontextprotocol/
+const MCP_PINS = {
+  filesystem: "2025.8.21",
+  everything: "2025.8.18"
+};
+
 if (!fssync.existsSync(serverAbs)) {
   console.error(`ERROR: MCP server not found: ${serverAbs}`);
   process.exit(1);
@@ -75,25 +82,46 @@ cfg.mcp["context7"] = {
   timeout: 15000
 };
 
+// Pinned — supply-chain controlled
 cfg.mcp["mcp_everything"] = {
   type: "local",
-  command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-everything"],
+  command: ["cmd", "/c", "npx", "-y", `@modelcontextprotocol/server-everything@${MCP_PINS.everything}`],
   enabled: false,
   timeout: 10000
 };
 
-cfg.mcp["puppeteer"] = {
-  type: "local",
-  command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-puppeteer"],
-  enabled: false,
-  timeout: 15000
-};
-
+// Pinned — pass allowed dirs as trailing args when enabling
 cfg.mcp["filesystem"] = {
   type: "local",
-  command: ["cmd", "/c", "npx", "-y", "@modelcontextprotocol/server-filesystem"],
+  command: ["cmd", "/c", "npx", "-y", `@modelcontextprotocol/server-filesystem@${MCP_PINS.filesystem}`, "."],
   enabled: false,
   timeout: 10000
+};
+
+// GitHub official MCP server (replaces deprecated @modelcontextprotocol/server-github)
+// toolsets: default | all | actions,repos,... — start minimal
+cfg.mcp["github"] = {
+  type: "local",
+  command: [
+    "docker", "run", "-i", "--rm",
+    "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+    "-e", "GITHUB_TOOLSETS",
+    "ghcr.io/github/github-mcp-server"
+  ],
+  environment: {
+    GITHUB_PERSONAL_ACCESS_TOKEN: "{env:GITHUB_PAT}",
+    GITHUB_TOOLSETS: "default"
+  },
+  enabled: false,
+  timeout: 20000
+};
+
+// Playwright official (replaces deprecated @modelcontextprotocol/server-puppeteer)
+cfg.mcp["playwright"] = {
+  type: "local",
+  command: ["docker", "run", "-i", "--rm", "mcp/playwright"],
+  enabled: false,
+  timeout: 20000
 };
 
 await writeJsonWithBackup(repoRoot, kiloPath, cfg);
