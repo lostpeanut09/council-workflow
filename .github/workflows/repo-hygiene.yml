@@ -1,0 +1,58 @@
+name: Repo Hygiene Guardrail
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Check repo sterility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No *.bak-* files tracked
+        run: |
+          if git ls-files | grep -E '\.bak-'; then
+            echo "❌ Found tracked *.bak-* files. Run: git rm --cached <file>"
+            exit 1
+          fi
+          echo "✅ No tracked backups"
+
+      - name: No .backups/ directory tracked
+        run: |
+          if git ls-files | grep -E '^\\.backups/'; then
+            echo "❌ Found tracked .backups/ contents. Run: git rm -r --cached .backups/"
+            exit 1
+          fi
+          echo "✅ .backups/ not tracked"
+
+      - name: No absolute Windows paths (C:\) in tracked files
+        run: |
+          if git grep -l 'C:\\' -- ':!*.yml' ':!*.md' ':!*.json' 2>/dev/null; then
+            echo "❌ Found hardcoded C:\\ paths in source files"
+            exit 1
+          fi
+          echo "✅ No hardcoded Windows paths"
+
+      - name: No runtime docs committed
+        run: |
+          if git ls-files | grep -E '^docs/(PLAN|REVIEW_KILO)\.md$'; then
+            echo "❌ Runtime artifact docs/PLAN.md or docs/REVIEW_KILO.md is tracked"
+            exit 1
+          fi
+          echo "✅ No runtime docs tracked"
+
+      - name: .gitattributes has no BOM
+        run: |
+          first_bytes=$(xxd -p -l 3 .gitattributes)
+          if [ "$first_bytes" = "efbbbf" ] || [ "$first_bytes" = "fffe2e" ] || [ "$first_bytes" = "feff00" ]; then
+            echo "❌ .gitattributes has a BOM: $first_bytes"
+            exit 1
+          fi
+          echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
