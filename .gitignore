@@ -6,6 +6,9 @@ docs/PLAN.md
 kilo.jsonc.bak-*
 .kilocode/mcp.json.bak-*
 
+# Centralized backup folder (preferred)
+.backups/
+
 # OS/IDE noise
 .DS_Store
 Thumbs.db

@@ -8,6 +8,10 @@ function stamp() {
   return new Date().toISOString().replaceAll(":", "").replaceAll(".", "");
 }
 
+function backupDir(repoRoot) {
+  return path.join(repoRoot, ".backups");
+}
+
 async function readJsonOr(defaultValue, filePath) {
   try {
     return JSON.parse(await fs.readFile(filePath, "utf8"));
@@ -16,11 +20,14 @@ async function readJsonOr(defaultValue, filePath) {
   }
 }
 
-async function writeJsonWithBackup(filePath, json) {
+async function writeJsonWithBackup(repoRoot, filePath, json) {
   const existed = fssync.existsSync(filePath);
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   if (existed) {
-    const backup = `${filePath}.bak-${stamp()}`;
+    const bdir = backupDir(repoRoot);
+    await fs.mkdir(bdir, { recursive: true });
+    const base = path.basename(filePath).replaceAll(path.sep, "_");
+    const backup = path.join(bdir, `${base}.bak-${stamp()}.json`);
     await fs.copyFile(filePath, backup);
     console.log(`Backup: ${backup}`);
   }
@@ -89,7 +96,7 @@ cfg.mcp["filesystem"] = {
   timeout: 10000
 };
 
-await writeJsonWithBackup(kiloPath, cfg);
+await writeJsonWithBackup(repoRoot, kiloPath, cfg);
 
 // -----------------------------
 // Legacy compat: .kilocode/mcp.json
@@ -109,4 +116,4 @@ legacy.mcpServers["kilo-reviewer"] = {
   alwaysAllow: ["kilo_review"],
   disabled: false
 };
-await writeJsonWithBackup(legacyPath, legacy);
+await writeJsonWithBackup(repoRoot, legacyPath, legacy);
