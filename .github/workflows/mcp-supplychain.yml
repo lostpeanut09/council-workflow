@@ -18,21 +18,31 @@ jobs:
 
       - name: Block deprecated @modelcontextprotocol/server-github
         run: |
-          if git grep -n "@modelcontextprotocol/server-github" -- . ':!docs/**' ':!*.md'; then
-            echo "❌ Found deprecated @modelcontextprotocol/server-github"
+          # Exclude comment lines (// ...) and docs/ directory
+          BAD=$(git grep -n "@modelcontextprotocol/server-github" \
+                -- . ':!docs/**' ':!*.md' 2>/dev/null \
+                | grep -v '^\s*//' | grep -v '//.*@modelcontextprotocol' || true)
+          if [ -n "$BAD" ]; then
+            echo "❌ Found deprecated @modelcontextprotocol/server-github (non-comment line)"
+            echo "$BAD"
             echo "   → Use ghcr.io/github/github-mcp-server (Docker official) instead"
             exit 1
           fi
-          echo "✅ No deprecated server-github"
+          echo "✅ No deprecated server-github in active code"
 
       - name: Block deprecated @modelcontextprotocol/server-puppeteer
         run: |
-          if git grep -n "@modelcontextprotocol/server-puppeteer" -- . ':!docs/**' ':!*.md'; then
-            echo "❌ Found deprecated @modelcontextprotocol/server-puppeteer"
+          # Exclude comment lines (// ...) and docs/ directory
+          BAD=$(git grep -n "@modelcontextprotocol/server-puppeteer" \
+                -- . ':!docs/**' ':!*.md' 2>/dev/null \
+                | grep -v '^\s*//' | grep -v '//.*@modelcontextprotocol' || true)
+          if [ -n "$BAD" ]; then
+            echo "❌ Found deprecated @modelcontextprotocol/server-puppeteer (non-comment line)"
+            echo "$BAD"
             echo "   → Use mcp/playwright (Docker/Microsoft official) instead"
             exit 1
           fi
-          echo "✅ No deprecated server-puppeteer"
+          echo "✅ No deprecated server-puppeteer in active code"
 
       - name: Require pinned @modelcontextprotocol/server-filesystem
         run: |

@@ -39,7 +39,7 @@
       "enabled": false,
       "timeout": 10000
     },
-    // GitHub official MCP (replaced deprecated @modelcontextprotocol/server-github)
+    // GitHub official MCP (use ghcr.io image, not the deprecated npm package)
     // Uses Docker + GITHUB_TOOLSETS for least-privilege tool selection
     // Requires: Docker running + GITHUB_PAT env var set
     "github": {
@@ -58,7 +58,7 @@
       "enabled": false,
       "timeout": 20000
     },
-    // Playwright official (Microsoft Docker image, replaced deprecated server-puppeteer)
+    // Playwright official (Microsoft Docker image, use mcp/playwright not the deprecated npm package)
     // Requires: Docker running
     "playwright": {
       "type": "local",

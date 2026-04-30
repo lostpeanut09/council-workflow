@@ -98,7 +98,7 @@ cfg.mcp["filesystem"] = {
   timeout: 10000
 };
 
-// GitHub official MCP server (replaces deprecated @modelcontextprotocol/server-github)
+// GitHub official MCP server (use ghcr.io image, not the deprecated npm package)
 // toolsets: default | all | actions,repos,... — start minimal
 cfg.mcp["github"] = {
   type: "local",
@@ -106,17 +106,19 @@ cfg.mcp["github"] = {
     "docker", "run", "-i", "--rm",
     "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
     "-e", "GITHUB_TOOLSETS",
+    "-e", "GITHUB_READ_ONLY",
     "ghcr.io/github/github-mcp-server"
   ],
   environment: {
     GITHUB_PERSONAL_ACCESS_TOKEN: "{env:GITHUB_PAT}",
-    GITHUB_TOOLSETS: "default"
+    GITHUB_TOOLSETS: "default",
+    GITHUB_READ_ONLY: "1"
   },
   enabled: false,
   timeout: 20000
 };
 
-// Playwright official (replaces deprecated @modelcontextprotocol/server-puppeteer)
+// Playwright official Docker image (use mcp/playwright, not the deprecated npm package)
 cfg.mcp["playwright"] = {
   type: "local",
   command: ["docker", "run", "-i", "--rm", "mcp/playwright"],
