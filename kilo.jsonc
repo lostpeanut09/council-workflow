@@ -1,4 +1,5 @@
 {
+  "$schema": "https://app.kilo.ai/config.json",
   "mcp": {
     // ── ACTIVE ────────────────────────────────────────────────────────────────
     "kilo-reviewer": {
@@ -51,7 +52,8 @@
       ],
       "environment": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PAT}",
-        "GITHUB_TOOLSETS": "default"
+        "GITHUB_TOOLSETS": "default",
+        "GITHUB_READ_ONLY": "1"
       },
       "enabled": false,
       "timeout": 20000

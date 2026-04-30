@@ -1,0 +1,67 @@
+name: MCP Supply Chain Guardrail
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  mcp-supplychain:
+    name: MCP supply chain checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Block deprecated @modelcontextprotocol/server-github
+        run: |
+          if git grep -n "@modelcontextprotocol/server-github" -- . ':!docs/**' ':!*.md'; then
+            echo "❌ Found deprecated @modelcontextprotocol/server-github"
+            echo "   → Use ghcr.io/github/github-mcp-server (Docker official) instead"
+            exit 1
+          fi
+          echo "✅ No deprecated server-github"
+
+      - name: Block deprecated @modelcontextprotocol/server-puppeteer
+        run: |
+          if git grep -n "@modelcontextprotocol/server-puppeteer" -- . ':!docs/**' ':!*.md'; then
+            echo "❌ Found deprecated @modelcontextprotocol/server-puppeteer"
+            echo "   → Use mcp/playwright (Docker/Microsoft official) instead"
+            exit 1
+          fi
+          echo "✅ No deprecated server-puppeteer"
+
+      - name: Require pinned @modelcontextprotocol/server-filesystem
+        run: |
+          # Match the package name NOT followed by @<digit> (i.e. unversioned)
+          if git grep -nP '@modelcontextprotocol/server-filesystem(?!@\d)' \
+              -- kilo.jsonc '.kilocode/mcp.json' 'scripts/install-kilo-jsonc.mjs' 2>/dev/null; then
+            echo "❌ server-filesystem must be pinned: @modelcontextprotocol/server-filesystem@YYYY.M.D"
+            exit 1
+          fi
+          echo "✅ server-filesystem is pinned"
+
+      - name: Require pinned @modelcontextprotocol/server-everything
+        run: |
+          if git grep -nP '@modelcontextprotocol/server-everything(?!@\d)' \
+              -- kilo.jsonc '.kilocode/mcp.json' 'scripts/install-kilo-jsonc.mjs' 2>/dev/null; then
+            echo "❌ server-everything must be pinned: @modelcontextprotocol/server-everything@YYYY.M.D"
+            exit 1
+          fi
+          echo "✅ server-everything is pinned"
+
+      - name: No bare npx without version for MCP packages
+        run: |
+          # Catch patterns like: npx -y @modelcontextprotocol/server-X" (without @version)
+          BAD=$(git grep -nP 'npx.*@modelcontextprotocol/server-[a-z-]+"' \
+                -- '*.mjs' '*.json' '*.jsonc' 2>/dev/null \
+                | grep -vP '@\d' || true)
+          if [ -n "$BAD" ]; then
+            echo "❌ Unversioned npx MCP package(s):"
+            echo "$BAD"
+            exit 1
+          fi
+          echo "✅ All npx MCP invocations are versioned"
