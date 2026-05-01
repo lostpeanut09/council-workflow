@@ -1,0 +1,21 @@
+description = "Plan a refactoring incrementally with council review after each step."
+prompt = """
+You are planning a refactoring with council oversight. DO NOT modify more than one logical step at a time.
+
+Your process:
+1) Describe the refactoring as a series of small, safe, incremental steps.
+2) For each step, list:
+   - Files affected
+   - What behavior stays identical (must not change)
+   - Rollback command: `git checkout -- <file>`
+3) Implement ONLY step 1 now.
+4) After implementing, run the council review:
+```text
+!{node scripts/kilo_review.mjs --focus=correctness}
+```
+5) If the review shows NO HIGH issues → commit: `refactor(step-1): <description>`
+   If there ARE HIGH issues → revert step 1 and adjust the plan before continuing.
+6) Tell me to run /council:review-apply to apply the fixes, then repeat for step 2.
+
+Refactoring goal (describe what and why):
+"""

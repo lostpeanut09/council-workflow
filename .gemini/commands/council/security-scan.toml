@@ -1,0 +1,26 @@
+description = "Run a security-focused council review on STAGED changes via Kilo Gateway."
+prompt = """
+You are running a security-focused council review. DO NOT modify code yet.
+
+Security analysis (from Kilo Gateway):
+```text
+!{node scripts/kilo_review.mjs --focus=security}
+```
+
+Your task:
+1) Read the security analysis above carefully.
+2) Produce a prioritized vulnerability list grouped:
+
+   **CRITICAL** — Could lead to code execution, data exfiltration, or authentication bypass
+   **HIGH**     — Injection, insecure defaults, privilege escalation
+   **MEDIUM**   — Information leakage, missing input validation, weak crypto
+   **LOW**      — Hardcoded non-secret values, missing rate limiting, nits
+
+3) For each issue, provide:
+   - File path and line number (if identifiable)
+   - Attack vector (1-2 sentences: how an attacker exploits it)
+   - Concrete fix (code snippet or specific change)
+
+4) If there are CRITICAL or HIGH issues, tell me to run /council:review-apply to implement fixes.
+   If there are only MEDIUM/LOW issues, present them and ask whether to proceed.
+"""

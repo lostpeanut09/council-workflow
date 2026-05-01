@@ -56,3 +56,23 @@ jobs:
             exit 1
           fi
           echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
+
+      - name: Lockfile in sync with package.json (if present)
+        run: |
+          if [ ! -f "package-lock.json" ]; then
+            echo "ℹ️  No package-lock.json found — skipping lockfile sync check"
+            exit 0
+          fi
+          if [ ! -f "package.json" ]; then
+            echo "❌ package-lock.json exists but package.json is missing"
+            exit 1
+          fi
+          # Dry-run: regenerate lockfile without running lifecycle hooks or installing
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund > /dev/null 2>&1
+          if ! git diff --quiet package-lock.json; then
+            echo "❌ package-lock.json is out of sync with package.json"
+            echo "   Run: npm install && git add package-lock.json"
+            git diff --stat package-lock.json
+            exit 1
+          fi
+          echo "✅ package-lock.json is in sync with package.json"
