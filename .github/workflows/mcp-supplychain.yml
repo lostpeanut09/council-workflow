@@ -109,3 +109,14 @@ jobs:
             exit 1
           fi
           echo "✅ Docker digest pinning is enforced"
+
+      - name: Inverse enforce - Lock must be populated if kilo.jsonc is pinned
+        run: |
+          if git grep -q '@sha256:' -- kilo.jsonc 2>/dev/null; then
+            if ! grep -q '@sha256:' docs/MCP_IMAGE_PINS.lock.json 2>/dev/null; then
+              echo "❌ kilo.jsonc contains @sha256: but lock file is placeholder/null"
+              echo "   → Run: node scripts/update-mcp-image-pins.mjs"
+              exit 1
+            fi
+            echo "✅ Inverse check passed: kilo.jsonc is pinned and lock is populated"
+          fi
