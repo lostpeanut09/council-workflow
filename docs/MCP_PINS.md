@@ -75,6 +75,62 @@ git commit -m "chore: bump MCP pins [filesystem@X.Y.Z, everything@X.Y.Z]"
 
 ---
 
+## Docker Image Digest Pinning
+
+Docker tags (e.g. `mcp/playwright`) are **mutable** — they can be silently updated to different content. For supply-chain safety, pin images to their immutable `@sha256:...` digest.
+
+### Lock file: `docs/MCP_IMAGE_PINS.lock.json`
+
+Committed into the repo. Contains the immutable digests for each Docker MCP image. Initially has `null` values — populate with the script below.
+
+### Update digests (requires Docker running)
+
+```bash
+node scripts/update-mcp-image-pins.mjs
+git add docs/MCP_IMAGE_PINS.lock.json
+git commit -m "chore: update docker MCP image digest pins"
+# Then regenerate kilo.jsonc with pinned refs:
+node scripts/install-kilo-jsonc.mjs
+```
+
+The installer reads the lock file automatically — if digests are present it uses `@sha256:...` refs; otherwise falls back to tag refs gracefully.
+
+### Verify image signatures (cosign) — for `mcp/*` Verified Publisher images
+
+Docker MCP Catalog images are signed. Verify with cosign:
+
+```bash
+COSIGN_REPOSITORY=mcp/signatures \
+cosign verify mcp/playwright \
+  --key https://raw.githubusercontent.com/docker/keyring/refs/heads/main/public/mcp/latest.pub
+```
+
+For `ghcr.io/github/github-mcp-server`, verify the commit label:
+
+```bash
+docker image inspect ghcr.io/github/github-mcp-server \
+  --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'
+# Compare the SHA to the github/github-mcp-server release page
+```
+
+### Docker digest bump checklist
+
+Before bumping a Docker image digest:
+
+- [ ] Run `node scripts/update-mcp-image-pins.mjs` (pulls latest and captures digest)
+- [ ] For `mcp/*` images: run cosign verify (see above)
+- [ ] For `ghcr.io` images: check the revision label against release notes
+- [ ] Open PR — council review required (`/council:review`)
+- [ ] After merge: run `node scripts/install-kilo-jsonc.mjs` to regenerate `kilo.jsonc`
+
+### When to bump
+
+- New security advisory affecting the image
+- New toolset features you need
+- Scheduled quarterly review
+
+---
+
 ## Version History
 
 | Date | filesystem | everything | Changed by |

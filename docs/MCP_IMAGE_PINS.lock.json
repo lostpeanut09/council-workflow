@@ -1,0 +1,14 @@
+{
+  "_comment": "Docker image digest lock for MCP servers. Run scripts/update-mcp-image-pins.mjs to populate.",
+  "generatedAt": null,
+  "images": {
+    "mcp/playwright": {
+      "ref": "mcp/playwright",
+      "pinned": null
+    },
+    "ghcr.io/github/github-mcp-server": {
+      "ref": "ghcr.io/github/github-mcp-server",
+      "pinned": null
+    }
+  }
+}

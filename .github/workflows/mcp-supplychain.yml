@@ -82,3 +82,24 @@ jobs:
             exit 1
           fi
           echo "✅ All MCP packages in config files are versioned"
+
+      - name: Enforce digest pinning when lock file is populated
+        run: |
+          # If MCP_IMAGE_PINS.lock.json exists and contains @sha256 digests,
+          # the installer must also reference those digests (not just tags).
+          LOCK="docs/MCP_IMAGE_PINS.lock.json"
+          if [ ! -f "$LOCK" ]; then
+            echo "ℹ️  No image lock file found — digest pinning not yet configured (optional)"
+            exit 0
+          fi
+          if ! grep -q '@sha256:' "$LOCK"; then
+            echo "ℹ️  Lock file present but digests are null — run scripts/update-mcp-image-pins.mjs"
+            exit 0
+          fi
+          # Lock has real digests — installer must use pinnedImage() helper
+          if ! git grep -q 'pinnedImage' -- scripts/install-kilo-jsonc.mjs 2>/dev/null; then
+            echo "❌ Lock file has digests but install-kilo-jsonc.mjs does not use pinnedImage()"
+            echo "   → Ensure the installer reads MCP_IMAGE_PINS.lock.json"
+            exit 1
+          fi
+          echo "✅ Docker digest pinning is enforced"

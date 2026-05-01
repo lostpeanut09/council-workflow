@@ -46,6 +46,17 @@ const MCP_PINS = {
   everything: "2025.8.18"
 };
 
+// Docker image digest pinning — reads docs/MCP_IMAGE_PINS.lock.json if present.
+// Run scripts/update-mcp-image-pins.mjs (requires Docker) to populate the lock.
+// Falls back to tag ref gracefully when lock is absent or digest is null.
+const imagePinsPath = path.join(repoRoot, "docs", "MCP_IMAGE_PINS.lock.json");
+let _imagePins = null;
+try { _imagePins = JSON.parse(fssync.readFileSync(imagePinsPath, "utf8")); } catch { /* no lock */ }
+function pinnedImage(ref) {
+  const v = _imagePins?.images?.[ref]?.pinned;
+  return (typeof v === "string" && v.includes("@sha256:")) ? v : ref;
+}
+
 if (!fssync.existsSync(serverAbs)) {
   console.error(`ERROR: MCP server not found: ${serverAbs}`);
   process.exit(1);
@@ -107,7 +118,7 @@ cfg.mcp["github"] = {
     "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
     "-e", "GITHUB_TOOLSETS",
     "-e", "GITHUB_READ_ONLY",
-    "ghcr.io/github/github-mcp-server"
+    pinnedImage("ghcr.io/github/github-mcp-server")
   ],
   environment: {
     GITHUB_PERSONAL_ACCESS_TOKEN: "{env:GITHUB_PAT}",
@@ -121,7 +132,7 @@ cfg.mcp["github"] = {
 // Playwright official Docker image (use mcp/playwright, not the deprecated npm package)
 cfg.mcp["playwright"] = {
   type: "local",
-  command: ["docker", "run", "-i", "--rm", "mcp/playwright"],
+  command: ["docker", "run", "-i", "--rm", pinnedImage("mcp/playwright")],
   enabled: false,
   timeout: 20000
 };
