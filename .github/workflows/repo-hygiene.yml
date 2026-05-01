@@ -57,6 +57,11 @@ jobs:
           fi
           echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
 
+      - name: Setup Node.js (for lockfile check)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Lockfile in sync with package.json (if present)
         run: |
           if [ ! -f "package-lock.json" ]; then
