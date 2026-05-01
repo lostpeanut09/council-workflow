@@ -102,4 +102,10 @@ jobs:
             echo "   → Ensure the installer reads MCP_IMAGE_PINS.lock.json"
             exit 1
           fi
+          # Repo config should also reference digests once lock is populated (reproducible checkout)
+          if ! git grep -q '@sha256:' -- kilo.jsonc 2>/dev/null; then
+            echo "❌ Digest lock populated but kilo.jsonc does not reference @sha256 digests"
+            echo "   → Run: node scripts/update-mcp-image-pins.mjs && node scripts/install-kilo-jsonc.mjs"
+            exit 1
+          fi
           echo "✅ Docker digest pinning is enforced"
