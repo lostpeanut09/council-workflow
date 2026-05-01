@@ -68,6 +68,17 @@ if (!fssync.existsSync(serverAbs)) {
 const kiloPath = path.join(repoRoot, "kilo.jsonc");
 const cfg = await readJsonOr({}, kiloPath);
 
+cfg["$schema"] ||= "https://app.kilo.ai/config.json";
+cfg.provider ||= {
+  "openai-compatible": {
+    options: {
+      apiKey: "{env:OPENAI_COMPAT_API_KEY}",
+      baseURL: "{env:OPENAI_COMPAT_BASE_URL}"
+    }
+  }
+};
+cfg.model ||= "openai-compatible/{env:OPENAI_COMPAT_MODEL}";
+
 cfg.mcp ||= {};
 cfg.permission ||= {};
 

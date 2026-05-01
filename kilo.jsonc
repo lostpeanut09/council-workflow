@@ -3,12 +3,12 @@
   "provider": {
     "openai-compatible": {
       "options": {
-        "apiKey": "{env:NVIDIA_NIM_API_KEY}",
-        "baseURL": "https://integrate.api.nvidia.com/v1"
+        "apiKey": "{env:OPENAI_COMPAT_API_KEY}",
+        "baseURL": "{env:OPENAI_COMPAT_BASE_URL}"
       }
     }
   },
-  "model": "REPLACE_WITH_A_MODEL_ID_FROM_/v1/models",
+  "model": "openai-compatible/{env:OPENAI_COMPAT_MODEL}",
   "mcp": {
     "kilo-reviewer": {
       "type": "local",
