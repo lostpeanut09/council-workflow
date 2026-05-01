@@ -1,0 +1,25 @@
+name: Verify MCP Signatures
+
+on:
+  workflow_dispatch: # Allows manual execution without slowing down PRs
+
+jobs:
+  verify-signatures:
+    name: Verify Docker MCP Cosign Signatures
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.5.0
+        with:
+          cosign-release: 'v2.2.4'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run verification script
+        run: node scripts/verify-mcp-images.mjs
