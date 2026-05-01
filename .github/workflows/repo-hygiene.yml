@@ -57,6 +57,20 @@ jobs:
           fi
           echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
 
+      - name: No hardcoded secrets or backend configs tracked
+        run: |
+          # 1) Check for leaked API keys (NVIDIA/Requesty/Kilo)
+          if git grep -E '(NVIDIA_NIM_API_KEY|REQUESTY_API_KEY|KILO_API_KEY)=' -- ':!*.example' 2>/dev/null; then
+            echo "❌ Found hardcoded API keys in tracked files"
+            exit 1
+          fi
+          # 2) Check for hardcoded COUNCIL_BACKEND
+          if git grep -E '^COUNCIL_BACKEND=' -- ':!*.example' 2>/dev/null; then
+            echo "❌ Found hardcoded COUNCIL_BACKEND in tracked files (use .env)"
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets or backend configs"
+
       - name: Setup Node.js (for lockfile check)
         uses: actions/setup-node@v4
         with:

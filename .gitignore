@@ -1,8 +1,14 @@
 # Generated council artifacts
 docs/REVIEW_KILO.md
+docs/REVIEW_KILO.json
 docs/PLAN.md
 docs/COUNCIL_REVIEW.md
 docs/COUNCIL_REVIEW.json
+
+# Secrets (never commit)
+.env
+.env.*
+!.env.example
 
 # Backups created by installers
 kilo.jsonc.bak-*

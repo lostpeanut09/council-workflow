@@ -2,10 +2,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-
-const KILO_BASE_URL = process.env.KILO_BASE_URL || "https://api.kilo.ai/api/gateway";
-const KILO_MODEL = process.env.KILO_MODEL || "kilo-auto/free";
-const MODE_HINT = process.env.KILO_MODE_HINT || "debug";
+import { chatCompletions } from "./llm_backend.mjs";
 
 const MAX_DIFF_CHARS = 200_000;
 const GIT_MAX_BUFFER = 10 * 1024 * 1024;
@@ -19,11 +16,12 @@ function has(name) {
 }
 
 const repoPath = arg("--repo", process.env.REPO_PATH || ".");
-const scope = arg("--scope", null); // e.g. src/ or "src/ docs/"
+const scope = arg("--scope", null);
 const outMd = arg("--out-md", "docs/COUNCIL_REVIEW.md");
 const outJson = arg("--out-json", "docs/COUNCIL_REVIEW.json");
 const outMerged = arg("--out-merged", "docs/REVIEW_KILO.md");
 const allowFail = has("--allow-fail");
+const jsonStdout = has("--json");
 
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8", maxBuffer: GIT_MAX_BUFFER });
@@ -31,33 +29,12 @@ function git(args) {
 
 function getStagedDiff() {
   git(["-C", repoPath, "rev-parse", "--is-inside-work-tree"]);
-  const args = ["-C", repoPath, "diff", "--staged"];
+  const a = ["-C", repoPath, "diff", "--staged"];
   if (scope) {
-    // Support multiple scopes separated by commas or spaces
     const scopes = scope.split(/[,\s]+/).filter(Boolean);
-    args.push("--", ...scopes);
+    a.push("--", ...scopes);
   }
-  return git(args).slice(0, MAX_DIFF_CHARS);
-}
-
-async function kilo(messages) {
-  const res = await fetch(`${KILO_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-kilocode-mode": MODE_HINT },
-    body: JSON.stringify({
-      model: KILO_MODEL,
-      messages,
-      temperature: 0.2,
-      max_tokens: 1400
-    })
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Kilo error ${res.status}: ${txt}`);
-  }
-  const json = await res.json();
-  return json?.choices?.[0]?.message?.content ?? "";
+  return git(a).slice(0, MAX_DIFF_CHARS);
 }
 
 function roleSystemPrompt(role) {
@@ -79,8 +56,7 @@ function roleSystemPrompt(role) {
 }
 
 function tryParseJson(text) {
-  // model might wrap json in fences; strip common wrappers
-  const cleaned = text
+  const cleaned = String(text || "")
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/```$/i, "")
@@ -101,7 +77,7 @@ async function main() {
   let diff;
   try {
     diff = getStagedDiff();
-  } catch (e) {
+  } catch {
     console.log("No git repo or cannot read staged diff. Skipping.");
     process.exit(0);
   }
@@ -115,13 +91,18 @@ async function main() {
   const results = [];
 
   for (const role of roles) {
-    const content = await kilo([
-      { role: "system", content: roleSystemPrompt(role) },
-      { role: "user", content: `Review this staged diff:\n\n${diff}` }
-    ]);
-
+    const { content, backend, baseURL, model } = await chatCompletions({
+      messages: [
+        { role: "system", content: roleSystemPrompt(role) },
+        { role: "user", content: `Review this staged diff:\n\n${diff}` }
+      ],
+      max_tokens: 1400,
+      temperature: 0.2,
+      modeHint: process.env.KILO_MODE_HINT || "debug"
+    });
     const parsed = tryParseJson(content);
     parsed.role = role;
+    parsed._meta = { backend, baseURL, model };
     results.push(parsed);
   }
 
@@ -129,13 +110,11 @@ async function main() {
   const now = new Date().toISOString();
 
   const mergedHigh = results.flatMap(r => r.high_risk?.map(x => `[${r.role.toUpperCase()}] ${x}`) ?? []);
-  const mergedMed  = results.flatMap(r => r.medium?.map(x => `[${r.role.toUpperCase()}] ${x}`) ?? []);
+  const mergedMed = results.flatMap(r => r.medium?.map(x => `[${r.role.toUpperCase()}] ${x}`) ?? []);
   const mergedTests = results.flatMap(r => r.missing_tests ?? []).map(x => x);
 
   const out = {
     generatedAt: now,
-    model: KILO_MODEL,
-    modeHint: MODE_HINT,
     scope: scope ?? null,
     verdict,
     roles: results
@@ -145,7 +124,6 @@ async function main() {
     `# Council Review`,
     ``,
     `- generatedAt: ${now}`,
-    `- model: ${KILO_MODEL}`,
     `- scope: ${scope ?? "(all staged)"}`,
     `- verdict: **${verdict}** (majority vote, 2/3)`,
     ``,
@@ -156,16 +134,13 @@ async function main() {
     ...results.map(r => `| ${r.role} | ${r.vote} | ${mdEsc(r.summary)} |`),
     ``,
     `## High risk`,
-    ...mergedHigh.map(x => `- ${x}`),
-    mergedHigh.length ? "" : "- (none)",
+    ...(mergedHigh.length ? mergedHigh.map(x => `- ${x}`) : ["- (none)"]),
     ``,
     `## Medium`,
-    ...mergedMed.map(x => `- ${x}`),
-    mergedMed.length ? "" : "- (none)",
+    ...(mergedMed.length ? mergedMed.map(x => `- ${x}`) : ["- (none)"]),
     ``,
     `## Missing tests`,
-    ...mergedTests.map(x => `- ${x}`),
-    mergedTests.length ? "" : "- (none)",
+    ...(mergedTests.length ? mergedTests.map(x => `- ${x}`) : ["- (none)"]),
     ``
   ].join("\n");
 
@@ -173,35 +148,34 @@ async function main() {
   await fs.writeFile(outMd, md, "utf8");
   await fs.writeFile(outJson, JSON.stringify(out, null, 2), "utf8");
 
-  // Single-feed summary to keep your existing /council:review-apply working.
+  // Keep compatibility with existing /council:review-apply
   const mergedMd = [
-    `# External Review (Council via Kilo)`,
+    `# External Review (Council via backend)`,
     ``,
     `Verdict: **${verdict}**`,
     ``,
     `## High-risk issues`,
-    ...mergedHigh.map(x => `- ${x}`),
-    mergedHigh.length ? "" : "- (none)",
+    ...(mergedHigh.length ? mergedHigh.map(x => `- ${x}`) : ["- (none)"]),
     ``,
     `## Medium issues`,
-    ...mergedMed.map(x => `- ${x}`),
-    mergedMed.length ? "" : "- (none)",
+    ...(mergedMed.length ? mergedMed.map(x => `- ${x}`) : ["- (none)"]),
     ``,
     `## Missing tests`,
-    ...mergedTests.map(x => `- ${x}`),
-    mergedTests.length ? "" : "- (none)",
+    ...(mergedTests.length ? mergedTests.map(x => `- ${x}`) : ["- (none)"]),
     ``
   ].join("\n");
 
   await fs.writeFile(outMerged, mergedMd, "utf8");
 
-  console.log(`Wrote: ${outMd}`);
-  console.log(`Wrote: ${outJson}`);
-  console.log(`Wrote: ${outMerged}`);
+  if (jsonStdout) console.log(JSON.stringify(out, null, 2));
+  else {
+    console.log(`Wrote: ${outMd}`);
+    console.log(`Wrote: ${outJson}`);
+    console.log(`Wrote: ${outMerged}`);
+  }
 }
 
 main().catch(err => {
   console.error(err?.stack || String(err));
   if (!allowFail) process.exit(1);
 });
-
