@@ -1,0 +1,13 @@
+description = "Run 3-role council review (architecture/security/qa) via Kilo and write docs outputs."
+prompt = """
+Do NOT modify code yet.
+
+Run the external council review now (staged diff):
+```text
+!{node scripts/kilo_council_review.mjs}
+```
+
+Then:
+1) Summarize the verdict and top 5 actions.
+2) Tell me to run /council:review-apply next.
+"""

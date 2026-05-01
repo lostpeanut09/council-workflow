@@ -1,0 +1,11 @@
+description = "Plan: convert docs/PLAN.md into a small tasklist + validation commands."
+prompt = """
+Read docs/PLAN.md and produce:
+- A tasklist (max 5 tasks) with acceptance criteria and exact verify commands
+- A risk list (security + regressions)
+
+Plan:
+@{docs/PLAN.md}
+
+Output in Markdown tables.
+"""

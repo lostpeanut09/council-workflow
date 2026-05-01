@@ -1,6 +1,8 @@
 # Generated council artifacts
 docs/REVIEW_KILO.md
 docs/PLAN.md
+docs/COUNCIL_REVIEW.md
+docs/COUNCIL_REVIEW.json
 
 # Backups created by installers
 kilo.jsonc.bak-*

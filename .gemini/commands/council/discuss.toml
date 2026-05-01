@@ -1,0 +1,18 @@
+description = "Discuss: clarify scope/constraints and update docs/PLAN.md before planning or review."
+prompt = """
+You MUST update docs/PLAN.md with:
+- Scope (in/out)
+- Constraints (security, compatibility, perf)
+- Acceptance criteria
+- Test commands
+- Rollback notes
+
+Template (reference):
+@{docs/PLAN.template.md}
+
+If docs/PLAN.md does not exist, create it by copying the template first, then fill it in.
+
+After updating docs/PLAN.md, output:
+1) A short summary of the plan
+2) A list of unknowns (or NONE)
+"""
