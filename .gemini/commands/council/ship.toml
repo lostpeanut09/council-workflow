@@ -1,0 +1,12 @@
+description = "Ship: Prepare a PR body combining PLAN.md and COUNCIL_REVIEW.md"
+prompt = """
+Read `docs/PLAN.md` and `docs/COUNCIL_REVIEW.md` (or `docs/REVIEW_KILO.md`).
+
+Generate a clean, structured Pull Request body that includes:
+- A high-level summary of the changes
+- The key acceptance criteria met
+- A summary of the security/architecture/qa review verdicts
+- Any remaining follow-ups or technical debt
+
+Format the output in standard Markdown suitable for GitHub.
+"""

@@ -111,9 +111,16 @@ if (!res.ok) {
   process.exit(allowFail ? 0 : 1); // exit(1) by default — callers must opt-in to suppress
 }
 
+const isJson = args.includes("--json");
+
 const json   = await res.json();
 const review = json?.choices?.[0]?.message?.content || "(empty response)";
 
 await fs.mkdir("docs", { recursive: true });
 await fs.writeFile(outFile, review, "utf8");
-console.log(review);
+
+if (isJson) {
+  console.log(JSON.stringify({ review }, null, 2));
+} else {
+  console.log(review);
+}

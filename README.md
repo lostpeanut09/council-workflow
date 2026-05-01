@@ -130,14 +130,31 @@ Commands reside in `.gemini/commands/council/`. Within Gemini CLI:
 
 ---
 
-## 5. Operational Workflow
+## 5. Operational Workflow (GSD-First)
 
-1. **Implement** feature/fix.
-2. **Stage**: `git add -A`
-3. **Review**: `/council:review`
-4. **Apply**: `/council:review-apply`
-5. **Final Testing**
-6. **Commit**
+**Mandatory Launcher**: All agent executions must pass through the local GSD preflight to ensure the runtime is present. Do not invoke `gemini` or `claude` directly.
+
+### Quickstart
+
+```bash
+# Gemini
+node scripts/gsd-run.mjs gemini
+
+# Claude Code via free-claude-code proxy
+node scripts/gsd-run.mjs claude
+
+# Kilo
+node scripts/gsd-run.mjs kilo
+```
+
+### Review Loop
+1. **Discuss**: `/council:discuss`
+2. **Plan**: `/council:plan`
+3. **Implement** feature/fix.
+4. **Stage**: `git add -A`
+5. **Review**: `/council:council-review` (MAGI multi-role)
+6. **Apply**: `/council:review-apply`
+7. **Final Testing & Commit**
 
 ---
 

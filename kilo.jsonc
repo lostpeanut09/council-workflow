@@ -1,4 +1,14 @@
 {
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "openai-compatible": {
+      "options": {
+        "apiKey": "{env:NVIDIA_NIM_API_KEY}",
+        "baseURL": "https://integrate.api.nvidia.com/v1"
+      }
+    }
+  },
+  "model": "REPLACE_WITH_A_MODEL_ID_FROM_/v1/models",
   "mcp": {
     "kilo-reviewer": {
       "type": "local",
