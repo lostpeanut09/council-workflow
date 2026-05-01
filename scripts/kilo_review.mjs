@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { chatCompletions } from "./llm_backend.mjs";
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -85,36 +86,27 @@ const FOCUS_PROMPTS = {
 
 const systemPrompt = FOCUS_PROMPTS[focus] ?? FOCUS_PROMPTS.correctness;
 
-// ── Call Kilo Gateway ─────────────────────────────────────────────────────────
-const body = {
-  model: KILO_MODEL,
-  messages: [
-    { role: "system", content: systemPrompt },
-    {
-      role: "user",
-      content: `Focus: ${focus}\n\nReview this staged diff${scope ? ` (scope: ${scope})` : ""}:\n\n${diff}`
-    }
-  ],
-  temperature: 0.2,
-  max_tokens: 1400
-};
-
-const res = await fetch(`${KILO_BASE_URL}/chat/completions`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json", "x-kilocode-mode": MODE_HINT },
-  body: JSON.stringify(body)
-});
-
-if (!res.ok) {
-  const errBody = await res.text().catch(() => "");
-  console.error(`Kilo review failed (${res.status}).\n${errBody}`);
-  process.exit(allowFail ? 0 : 1); // exit(1) by default — callers must opt-in to suppress
+// ── Call LLM Backend ─────────────────────────────────────────────────────────
+let review = "";
+try {
+  review = await chatCompletions({
+    messages: [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: `Focus: ${focus}\n\nReview this staged diff${scope ? ` (scope: ${scope})` : ""}:\n\n${diff}`
+      }
+    ],
+    max_tokens: 1400,
+    temperature: 0.2,
+    extraHeaders: { "x-kilocode-mode": MODE_HINT }
+  });
+} catch (err) {
+  console.error(err.message);
+  process.exit(allowFail ? 0 : 1);
 }
 
 const isJson = args.includes("--json");
-
-const json   = await res.json();
-const review = json?.choices?.[0]?.message?.content || "(empty response)";
 
 await fs.mkdir("docs", { recursive: true });
 await fs.writeFile(outFile, review, "utf8");

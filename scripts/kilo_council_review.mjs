@@ -2,8 +2,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { chatCompletions } from "./llm_backend.mjs";
 
-const KILO_BASE_URL = process.env.KILO_BASE_URL || "https://api.kilo.ai/api/gateway";
 const KILO_MODEL = process.env.KILO_MODEL || "kilo-auto/free";
 const MODE_HINT = process.env.KILO_MODE_HINT || "debug";
 
@@ -41,23 +41,12 @@ function getStagedDiff() {
 }
 
 async function kilo(messages) {
-  const res = await fetch(`${KILO_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-kilocode-mode": MODE_HINT },
-    body: JSON.stringify({
-      model: KILO_MODEL,
-      messages,
-      temperature: 0.2,
-      max_tokens: 1400
-    })
+  return chatCompletions({
+    messages,
+    max_tokens: 1400,
+    temperature: 0.2,
+    extraHeaders: { "x-kilocode-mode": MODE_HINT }
   });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Kilo error ${res.status}: ${txt}`);
-  }
-  const json = await res.json();
-  return json?.choices?.[0]?.message?.content ?? "";
 }
 
 function roleSystemPrompt(role) {

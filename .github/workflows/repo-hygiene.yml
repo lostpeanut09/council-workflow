@@ -57,6 +57,18 @@ jobs:
           fi
           echo "✅ .gitattributes is BOM-free (first bytes: $first_bytes)"
 
+      - name: No hardcoded secrets or environment selectors
+        run: |
+          if git grep -E '(NVIDIA_NIM_API_KEY|REQUESTY_API_KEY) *=' -- ':!*.example' ':!*.md' 2>/dev/null; then
+            echo "❌ Found hardcoded API keys in source files"
+            exit 1
+          fi
+          if git grep -E '^COUNCIL_BACKEND *=' -- ':!*.example' ':!*.md' 2>/dev/null; then
+            echo "❌ Found hardcoded COUNCIL_BACKEND selection. This must only exist in .env."
+            exit 1
+          fi
+          echo "✅ No hardcoded secrets or env selectors"
+
       - name: Setup Node.js (for lockfile check)
         uses: actions/setup-node@v4
         with:

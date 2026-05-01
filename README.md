@@ -136,6 +136,8 @@ Commands reside in `.gemini/commands/council/`. Within Gemini CLI:
 
 ### Quickstart
 
+You can dynamically switch the AI backend for Kilo Gateway using the `COUNCIL_BACKEND` environment variable. Ensure you have copied `.env.example` to `.env` first.
+
 ```bash
 # Gemini
 node scripts/gsd-run.mjs gemini
@@ -143,8 +145,26 @@ node scripts/gsd-run.mjs gemini
 # Claude Code via free-claude-code proxy
 node scripts/gsd-run.mjs claude
 
-# Kilo
-node scripts/gsd-run.mjs kilo
+# Kilo (Default Gateway)
+COUNCIL_BACKEND=kilo-gateway node scripts/gsd-run.mjs kilo
+
+# Kilo (NVIDIA NIM fallback)
+COUNCIL_BACKEND=nim node scripts/gsd-run.mjs kilo
+
+# Kilo (Requesty gateway fallback)
+COUNCIL_BACKEND=requesty node scripts/gsd-run.mjs kilo
+```
+
+> [!NOTE]
+> **Privacy and Data Routing**:
+> - `nim`: Prompts are sent to NVIDIA NIM APIs. This allows extremely high quotas but routes data to NVIDIA.
+> - `requesty`: Uses the Requesty router. Set `REQUESTY_MODEL=policy/<name>` in your `.env` to leverage intelligent fallbacks.
+> - `kilo-gateway`: Uses the standard Kilo Gateway proxy.
+
+### Arena Fallback (LMArena)
+If you need to quickly determine the best model to set in `NIM_MODEL` or `REQUESTY_MODEL`, you can query the official Hugging Face LMArena dataset directly without needing a heavy MCP server:
+```bash
+node scripts/lmarena_top.mjs
 ```
 
 ### Review Loop
